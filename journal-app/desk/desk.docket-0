@@ -1,0 +1,10 @@
+:~
+  title+'Journal'
+  info+'Dear diary...'
+  color+0xd9.b06d
+  version+[0 1 0]
+  website+'https://urbit.org'
+  license+'MIT'
+  base+'journal'
+  glob-ames+[~zod 0v0]
+==
