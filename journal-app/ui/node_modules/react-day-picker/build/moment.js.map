@@ -1,0 +1,1 @@
+{"version":3,"sources":["../src/moment.js"],"names":["MomentLocalUtils"],"mappings":";;;;;;;;;;;8BAASA,gB","file":"moment.js","sourcesContent":["export { MomentLocalUtils as default } from './addons/MomentLocaleUtils';\n"]}

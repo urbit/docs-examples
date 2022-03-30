@@ -1,0 +1,1 @@
+{"ast":null,"code":"export var ATTRIBUTE_PREFIX = \"data-rr-ui-\";\nexport var PROPERTY_PREFIX = \"rrUi\";\nexport function dataAttr(property) {\n  return \"\".concat(ATTRIBUTE_PREFIX).concat(property);\n}\nexport function dataProp(property) {\n  return \"\".concat(PROPERTY_PREFIX).concat(property);\n}","map":null,"metadata":{},"sourceType":"module"}
