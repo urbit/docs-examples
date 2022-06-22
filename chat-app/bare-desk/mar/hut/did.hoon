@@ -1,5 +1,4 @@
 /-  *hut
-/+  *mip
 |_  u=upd
 ++  grow
   |%
