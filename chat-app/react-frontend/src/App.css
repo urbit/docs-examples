@@ -1,0 +1,133 @@
+:root {
+  color-scheme: dark;
+}
+body {
+  background-color: #181818;
+  color: #d8d8d8;
+  margin: 0;
+  height: 100vh;
+  width: 100vw;
+}
+* {
+  font-family: monospace;
+  font-size: 1.1rem;
+  box-sizing: border-box;
+}
+div#root {
+  height: 100%;
+  width: 100%;
+  max-width: 100%;
+  padding: 2ch;
+}
+main {
+  display: flex;
+  flex-direction: row;
+  justify-content: stretch;
+  height: calc(100% - 16em);
+}
+.hut {
+  height: 2em;
+  line-height: 2em;
+  font-weight: bold;
+  border-top: 1px solid #585858;
+  border-bottom: 1px solid #585858;
+}
+.msgs {
+  flex: 1 1 auto;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.msg {
+  margin: 0.4em 0.4em 0 16ch;
+  text-indent: -16ch;
+}
+.who {
+  width: 16ch;
+  text-align: right;
+  padding-right: 1ch;
+  display: inline-block;
+  color: rgba(216, 216, 216, 0.5);
+}
+.what {
+  overflow-wrap: break-word;
+  text-overflow: ellipsis;
+}
+.ppl {
+  height: 100%;
+  margin-top: 5px;
+  width: 16ch;
+  padding-left: 2ch;
+  flex: 0 0 auto;
+  overflow-y: auto;
+}
+input, textarea {
+  background-color: #383838;
+  border: none;
+  color: #d8d8d8;
+}
+button {
+  background-color: #ab4642;
+  color: #d8d8d8;
+  border: none;
+  padding: none;
+  cursor: pointer;
+  width: 14ch;
+}
+.kick {
+  white-space: pre;
+  color: #ab4642;
+  background-color: #181818;
+  border: none;
+  padding: 0;
+}
+.our {
+  width: 14ch;
+  display: inline-block;
+  text-align: right;
+  flex: 0 0 auto;
+  align-self: center;
+  margin-right: 2ch;
+}
+.input {
+  display: flex;
+  flex-direction: row;
+  justify-content: stretch;
+  height: 4em;
+  margin-top: 1em;
+}
+textarea {
+  flex: 1 1 auto;
+}
+header {
+  height: 9em;
+}
+header p {margin: 0.4em;}
+header input {width: 14ch}
+select {
+  background-color: #787878;
+  color: black;
+}
+.fix {flex: 1 1 auto}
+label {
+  display: inline-block;
+  width: 8ch;
+}
+.conn {
+  width: fit-content;
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 999;
+  font-size: 0.9em;
+  padding: 3px;
+}
+.out {color: rgba(216, 216, 216, 0.5)}
+@media only screen and (max-width: 800px) {
+  .ppl {display: none}
+  .our {display: none}
+  .msg {margin-left: 0; text-indent: initial}
+  .who {width: initial}
+  select {max-width: 14ch}
+}
