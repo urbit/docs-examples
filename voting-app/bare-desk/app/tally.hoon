@@ -403,14 +403,21 @@
 ++  get-members
   |=  =gid
   ^-  (set ship)
-  =<  members
-  %-  fall
-  :_  *group:g
-  .^  (unit group:g)
-    %gx
-    (scot %p our.bol)
-    %group-store
-    (scot %da now.bol)
-    /groups/ship/(scot %p p.gid)/[q.gid]/noun
+  %-  ~(gas in *(set ship))
+  %+  skim
+    %~  tap  in
+    =<  members
+    %-  fall
+    :_  *group:g
+    .^  (unit group:g)
+      %gx
+      (scot %p our.bol)
+      %group-store
+      (scot %da now.bol)
+      /groups/ship/(scot %p p.gid)/[q.gid]/noun
+    ==
+  |=  =ship
+  ?|  =(our.bol ship)
+      ?=(?(%czar %king %duke) (clan:title ship))
   ==
 --
