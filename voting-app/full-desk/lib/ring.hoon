@@ -1,0 +1,1 @@
+../../bare-desk/lib/ring.hoon

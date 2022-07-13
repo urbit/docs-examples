@@ -1,0 +1,10 @@
+:~
+  title+'Tally'
+  info+'Ring signature voting for groups.'
+  color+0xc4.251a
+  version+[0 1 0]
+  website+'https://urbit.org'
+  license+'MIT'
+  base+'tally'
+  site+/tally
+==
