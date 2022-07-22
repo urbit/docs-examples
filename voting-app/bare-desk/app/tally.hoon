@@ -250,7 +250,7 @@
   ?>  =(our.bol p.gid)
   ?>  (~(has in (get-members:hc gid)) src.bol)
   :_  this
-  :~  %+  fact-init:io  %tally-action
+  :~  %+  fact-init:io  %tally-update
       !>  ^-  update
       :-  %init
       (fall (~(get by by-group) gid) *(map pid [=poll =votes]))
