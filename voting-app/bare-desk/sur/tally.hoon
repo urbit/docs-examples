@@ -1,8 +1,7 @@
-/-  *ring
+/-  *ring, *squad
 /+  *mip
 |%
 +$  pid  @
-+$  gid  (pair @p @tas)
 +$  poll
   $:  creator=@p
       proposal=@t

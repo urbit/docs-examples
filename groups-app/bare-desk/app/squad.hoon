@@ -603,6 +603,9 @@
       [%x %all ~]
     ``noun+!>([squads acls members])
   ::
+      [%x %squads ~]
+    ``noun+!>(squads)
+  ::
       [%x %gids %all ~]
     ``noun+!>(`(set gid)`~(key by squads))
   ::

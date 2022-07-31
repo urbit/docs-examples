@@ -1,10 +1,66 @@
-/-  *tally, ms=metadata-store, g=group
-/+  *mip
+/-  *tally, *squad
 |=  [bol=bowl:gall =by-group voted=(set pid) withdrawn=(set pid)]
-=<
-=/  all-group-names=(list (pair gid @t))  all-group-names
-=/  group-names  (get-group-names ~(tap in ~(key by by-group)))
-|^  ^-  manx
+^-  manx
+?.  .^(? %gu /(scot %p our.bol)/squad/(scot %da now.bol))
+  ;html
+    ;head
+      ;title: Tally
+      ;meta(charset "utf-8");
+      ;style
+        ;+  ;/
+            ^~
+            ^-  tape
+            %-  trip
+            '''
+            body {width: 100%; height: 100%; margin: 0;}
+            * {font-family: monospace}
+            div {
+              position: relative;
+              top: 50%;
+              left: 50%;
+              transform: translateX(-50%) translateY(-50%);
+              width: 40ch;
+            }
+            '''
+      ==
+    ==
+    ;body
+      ;div
+        ;h3: Squad app not installed
+        ;p
+          ;+  ;/  "Tally depends on the Squad app. ".
+                  "You can install it from "
+          ;a/"web+urbitgraph://~pocwet/squad": ~pocwet/squad
+        ==
+      ==
+    ==
+  ==
+=/  all-squads=(list (pair gid squad))
+  %+  sort
+    %~  tap  by
+    .^  (map gid squad)
+      %gx
+      (scot %p our.bol)
+      %squad
+      (scot %da now.bol)
+      %squads
+      /noun
+    ==
+  |=  [a=(pair gid squad) b=(pair gid squad)]
+  (aor title.q.a title.q.b)
+=/  has-polls
+  %+  skim  all-squads
+  |=  (pair gid squad)
+  (~(has by by-group) p)
+=/  our-life
+  .^  life
+    %j
+    (scot %p our.bol)
+    %life
+    (scot %da now.bol)
+    /(scot %p our.bol)
+  ==
+|^
 ;html
   ;head
     ;title: Tally
@@ -16,37 +72,37 @@
   ;body
     ;h1: tally
     ;h2: subscriptions
-    ;form(method "post")
+    ;form(method "post", action "/tally/watch")
       ;select
-        =name      "s-gid"
+        =name      "gid"
         =required  ""
         ;*  (group-options-component %.n %.n)
       ==
       ;input(id "s", type "submit", value "watch");
     ==
-    ;form(method "post")
+    ;form(method "post", action "/tally/leave")
       ;select
-        =name      "u-gid"
+        =name      "gid"
         =required  ""
         ;*  (group-options-component %.n %.y)
       ==
       ;input(id "u", type "submit", value "leave");
     ==
     ;h2: new poll
-    ;form(method "post")
+    ;form(method "post", action "/tally/new")
       ;label(for "n-gid"): group:
       ;select
         =id        "n-gid"
-        =name      "n-gid"
+        =name      "gid"
         =required  ""
         ;*  (group-options-component %.y %.y)
       ==
       ;br;
-      ;label(for "n-days"): duration:
+      ;label(for "days"): duration:
       ;input
         =type         "number"
-        =id           "n-days"
-        =name         "n-days"
+        =id           "days"
+        =name         "days"
         =min          "1"
         =step         "1"
         =required     ""
@@ -54,11 +110,11 @@
         ;+  ;/("")
       ==
       ;br;
-      ;label(for "n-proposal"): proposal:
+      ;label(for "proposal"): proposal:
       ;input
         =type      "text"
-        =id        "n-proposal"
-        =name      "n-proposal"
+        =id        "proposal"
+        =name      "proposal"
         =size      "50"
         =required  ""
         ;+  ;/("")
@@ -67,16 +123,15 @@
       ;input(id "submit", type "submit", value "submit");
     ==
     ;h2: groups
-    ;*  ?~  group-names
+    ;*  ?~  has-polls
           ~[;/("")]
-        (turn group-names group-component)
+        (turn has-polls group-component)
   ==
 ==
 ::
 ++  group-options-component
   |=  [our=? in-subs=?]
   ^-  marl
-  =/  names=(list (pair gid @t))  all-group-names
   =/  subs=(set gid)
     %-  ~(gas in *(set gid))
     %+  turn  ~(tap by wex.bol)
@@ -84,19 +139,19 @@
     ^-  gid
     ?>  ?=([@ @ ~] wire)
     [(slav %p i.wire) i.t.wire]
-  =?  names  &(our in-subs)
-    (skim names |=((pair gid @t) |(=(our.bol p.p) (~(has in subs) p))))
-  =?  names  &(!our in-subs)
-    (skim names |=((pair gid @t) (~(has in subs) p)))
-  =?  names  &(!our !in-subs)
-    (skip names |=((pair gid @t) |(=(our.bol p.p) (~(has in subs) p))))
-  %+  turn  names
-  |=  (pair gid @t)
+  =?  all-squads  &(our in-subs)
+    (skim all-squads |=((pair gid squad) |(=(our.bol host.p) (~(has in subs) p))))
+  =?  all-squads  &(!our in-subs)
+    (skim all-squads |=((pair gid squad) (~(has in subs) p)))
+  =?  all-squads  &(!our !in-subs)
+    (skip all-squads |=((pair gid squad) |(=(our.bol host.p) (~(has in subs) p))))
+  %+  turn  all-squads
+  |=  (pair gid squad)
   ^-  manx
-  ;option(value "{=>(<p.p> ?>(?=(^ .) t))}_{(trip q.p)}"): {(trip q)}
+  ;option(value "{=>(<host.p> ?>(?=(^ .) t))}_{(trip name.p)}"): {(trip title.q)}
 ::
 ++  group-component
-  |=  (pair gid @t)
+  |=  (pair gid squad)
   ^-  manx
   =/  polls=(list [=pid =poll =votes])
     ~(tap by (~(got by by-group) p))
@@ -106,11 +161,11 @@
     |=  [* =poll *]
     (gth expiry.poll now.bol)
   =/  title=tape
-    %+  weld  (trip q)
+    %+  weld  (trip title.q)
     ?:  =(0 open)
       ""
     " ({(a-co:co open)})"
-  ;details(id "{=>(<p.p> ?>(?=(^ .) t))}_{(trip q.p)}", open "open")
+  ;details(id "{=>(<host.p> ?>(?=(^ .) t))}_{(trip name.p)}", open "open")
     ;summary
       ;h3: {title}
     ==
@@ -134,7 +189,7 @@
       ;th: proposal:
       ;td: {(trip proposal.poll)}
     ==
-    ;+  ?.  ?|  =(our.bol p.gid)
+    ;+  ?.  ?|  =(our.bol host.gid)
                 &(=(our.bol creator.poll) (gte expiry.poll now.bol))
             ==
           ;/("")
@@ -146,14 +201,14 @@
         ;tr
           ;th: withdraw:
           ;td
-            ;form(method "post")
+            ;form(method "post", action "/tally/withdraw")
               ;input
                 =type  "hidden"
-                =name  "w-gid"
-                =value  "{=>(<p.gid> ?>(?=(^ .) t))}_{(trip q.gid)}"
+                =name  "gid"
+                =value  "{=>(<host.gid> ?>(?=(^ .) t))}_{(trip name.gid)}"
                 ;+  ;/("")
               ==
-              ;input(type "hidden", name "w-pid", value (a-co:co pid));
+              ;input(type "hidden", name "pid", value (a-co:co pid));
               ;input(type "submit", value "withdraw?");
             ==
           ==
@@ -179,16 +234,16 @@
         ;tr
           ;th: vote:
           ;td
-            ;form(method "post")
+            ;form(method "post", action "/tally/vote")
               ;input
                 =type   "hidden"
-                =name   "v-gid"
-                =value  "{=>(<p.gid> ?>(?=(^ .) t))}_{(trip q.gid)}"
+                =name   "gid"
+                =value  "{=>(<host.gid> ?>(?=(^ .) t))}_{(trip name.gid)}"
                 ;+  ;/("")
               ==
-              ;input(type "hidden", name "v-pid", value (a-co:co pid));
-              ;input(id "yea", type "submit", name "v-choice", value "yea");
-              ;input(id "nay", type "submit", name "v-choice", value "nay");
+              ;input(type "hidden", name "pid", value (a-co:co pid));
+              ;input(id "yea", type "submit", name "choice", value "yea");
+              ;input(id "nay", type "submit", name "choice", value "nay");
             ==
           ==
         ==
@@ -239,6 +294,7 @@
       (sun:fl 100)
     (div:fl (sun:fl p) (sun:fl q))
   --
+::
 ++  expiry-component
   |=  d=@da
   ^-  manx
@@ -257,6 +313,7 @@
           ;/  "{(a-co:co h.tarp)} hours"
         ;/  "{(a-co:co m.tarp)} minutes"
   ==
+::
 ++  style
   ^~
   ^-  tape
@@ -279,60 +336,4 @@
   #submit {margin-top: 1em}
   #yea {margin-right: 1ch}
   '''
---
-::
-|%
-++  our-groups
-  ^-  (set gid)
-  %-  ~(rep in get-groups)
-  |=  [a=gid b=(set gid)]
-  ?.  =(p.a our.bol)
-    b
-  (~(put in b) a)
-::
-++  get-group-names
-  |=  groups=(list gid)
-  ^-  (list (pair gid @t))
-  %+  sort
-    %+  turn  groups
-    |=  =gid
-    ^-  (pair ^gid @t)
-    =/  group-data
-      .^  (unit association:ms)
-        %gx
-        (scot %p our.bol)
-        %metadata-store
-        (scot %da now.bol)
-        /metadata/groups/ship/(scot %p p.gid)/[q.gid]/noun
-      ==
-    ?~  group-data
-      [gid q.gid]
-    [gid title.metadatum.u.group-data]
-  |=([[* a=@] [* b=@]] (aor a b))
-::
-++  all-group-names
-  ^-  (list (pair gid @t))
-  (get-group-names ~(tap in get-groups))
-::
-++  get-groups
-  ^-  (set gid)
-  %.  head
-  %~  run  in
-  %.  %groups
-  %~  get  ju
-  .^  (jug app-name:ms [gid *])
-    %gy
-    (scot %p our.bol)
-    %metadata-store
-    (scot %da now.bol)
-    /app-indices
-  ==
-++  our-life
-  .^  life
-    %j
-    (scot %p our.bol)
-    %life
-    (scot %da now.bol)
-    /(scot %p our.bol)
-  ==
 --
