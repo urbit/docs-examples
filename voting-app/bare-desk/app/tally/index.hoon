@@ -134,7 +134,10 @@
   ^-  marl
   =/  subs=(set gid)
     %-  ~(gas in *(set gid))
-    %+  turn  ~(tap by wex.bol)
+    %+  turn
+      %+  skim  ~(tap by wex.bol)
+      |=  [[=wire *] *]
+      ?=([@ @ ~] wire)
     |=  [[=wire *] *]
     ^-  gid
     ?>  ?=([@ @ ~] wire)

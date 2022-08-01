@@ -22,7 +22,9 @@
 ++  on-init
   ^-  (quip card _this)
   :_  this
-  [%pass /bind %arvo %e %connect `/'tally' %tally]~
+  :~  (~(arvo pass:io /bind) %e %connect `/'tally' %tally)
+      (~(watch-our pass:io /squad) %squad /local/all)
+  ==
 ++  on-save  !>(state)
 ++  on-load
   |=  old-vase=vase
@@ -148,7 +150,7 @@
               [host.gid.act %tally]
             tally-action+!>(`action`[%new proposal.act days.act gid.act])
         ==
-      ?>  (~(has in (get-members:hc gid.act)) src.bol)
+      ?>  (is-allowed:hc gid.act src.bol)
       =/  members=(set [=ship =life])  (make-ring-members:hc gid.act)
       ?>  ?=(^ members)
       =/  expiry=@da  (add now.bol (yule days.act 0 0 0 ~))
@@ -247,7 +249,7 @@
   ?>  ?=([@ @ ~] path)
   =/  =gid  [(slav %p i.path) i.t.path]
   ?>  =(our.bol host.gid)
-  ?>  (~(has in (get-members:hc gid)) src.bol)
+  ?>  (is-allowed:hc gid src.bol)
   :_  this
   :~  %+  fact-init:io  %tally-update
       !>  ^-  update
@@ -258,6 +260,86 @@
 ++  on-agent
   |=  [=wire =sign:agent:gall]
   ^-  (quip card _this)
+  ?:  ?=([%squad ~] wire)
+    ?+    -.sign  (on-agent:def wire sign)
+        %kick
+      :_  this
+      :~  (~(watch-our pass:io /squad) %squad /local/all)
+      ==
+    ::
+        %watch-ack
+      ?~  p.sign  `this
+      :_  this
+      :~  (~(wait pass:io /behn) (add now.bol ~m15))
+      ==
+    ::
+        %fact
+      ?>  ?=(%squad-did p.cage.sign)
+      =/  =upd  !<(upd q.cage.sign)
+      ?+    -.upd  `this
+          %init-all
+        =/  to-rm=(list gid)
+          ~(tap in (~(dif in ~(key by by-group)) ~(key by squads.upd)))
+        =.  by-group
+          |-
+          ?~  to-rm  by-group
+          $(to-rm t.to-rm, by-group (~(del by by-group) i.to-rm))
+        =/  watchers=(list [=gid =ship])
+          %+  turn  ~(val by sup.bol)
+          |=  [=ship =path]
+          ^-  [gid @p]
+          ?>  ?=([@ @ ~] path)
+          [[(slav %p i.path) i.t.path] ship]
+        =/  cards=(list card)
+          %+  roll  watchers
+          |=  [[=gid =ship] cards=(list card)]
+          ?.  (~(has by squads.upd) gid)
+            :_  cards
+            (kick-only:io ship /(scot %p host.gid)/[name.gid] ~)
+          =/  =squad  (~(got by squads.upd) gid)
+          ?.  ?|  &(pub.squad (~(has ju acls.upd) gid ship))
+                  &(!pub.squad !(~(has ju acls.upd) gid ship))
+              ==
+            cards
+          :_  cards
+          (kick-only:io ship /(scot %p host.gid)/[name.gid] ~)
+        =.  cards
+          %+  weld  cards
+          %+  turn  to-rm
+          |=  =gid
+          ^-  card
+          =/  =path  /(scot %p host.gid)/[name.gid]
+          (~(leave-path pass:io path) [host.gid %tally] path)
+        [cards this(by-group by-group)]
+      ::
+          %del
+        =/  =path  /(scot %p host.gid.upd)/[name.gid.upd]
+        :_  this(by-group (~(del by by-group) gid.upd))
+        :~  (kick:io path ~)
+            (~(leave-path pass:io path) [host.gid.upd %tally] path)
+        ==
+      ::
+          %kick
+        =/  =path  /(scot %p host.gid.upd)/[name.gid.upd]
+        ?.  =(our.bol ship.upd)
+          :_  this
+          :~  (kick-only:io ship.upd path ~)
+          ==
+        :_  this(by-group (~(del by by-group) gid.upd))
+        :~  (kick:io path ~)
+            (~(leave-path pass:io path) [host.gid.upd %tally] path)
+        ==
+      ::
+          %leave
+        ?.  =(our.bol ship.upd)
+          `this
+        =/  =path  /(scot %p host.gid.upd)/[name.gid.upd]
+        :_  this(by-group (~(del by by-group) gid.upd))
+        :~  (kick:io path ~)
+            (~(leave-path pass:io path) [host.gid.upd %tally] path)
+        ==
+      ==
+    ==
   ?>  ?=([@ @ ~] wire)
   =/  =gid  [(slav %p i.wire) i.t.wire]
   ?+    -.sign  (on-agent:def wire sign)
@@ -275,7 +357,7 @@
     =/  upd  !<(update q.cage.sign)
     ?-    -.upd
         %init
-      =;  by-group  `this
+      =;  by-group  `this(by-group by-group)
       %+  ~(put by by-group)  gid
       %-  ~(rep by polls.upd)
       |=  [[=pid =poll =votes] acc=(map pid [=poll =votes])]
@@ -334,13 +416,22 @@
 ++  on-arvo
   |=  [=wire =sign-arvo]
   ^-  (quip card _this)
-  ?.  ?=([%bind ~] wire)
+  ?:  ?=([%bind ~] wire)
+    ?.  ?=([%eyre %bound *] sign-arvo)
+      (on-arvo:def [wire sign-arvo])
+    ~?  !accepted.sign-arvo
+      %eyre-rejected-tally-binding
+    `this
+  ?.  ?=([%behn ~] wire)
     (on-arvo:def [wire sign-arvo])
-  ?.  ?=([%eyre %bound *] sign-arvo)
-    (on-arvo:def [wire sign-arvo])
-  ~?  !accepted.sign-arvo
-    %eyre-rejected-tally-binding
-  `this
+  ?>  ?=([%behn %wake *] sign-arvo)
+  ?~  error.sign-arvo
+    :_  this
+    :~  (~(watch-our pass:io /squad) %squad /local/all)
+    ==
+  :_  this
+  :~  (~(wait pass:io /behn) (add now.bol ~m15))
+  ==
 ::
 ++  on-leave  on-leave:def
 ++  on-peek   on-peek:def
@@ -402,6 +493,24 @@
     invited       t.invited
     participants  (~(put in participants) [i.invited u.lyfe])
   ==
+::
+++  is-allowed
+  |=  [=gid =ship]
+  ^-  ?
+  =/  u-acl
+    .^  (unit [pub=? acl=ppl])
+      %gx
+      (scot %p our.bol)
+      %squad
+      (scot %da now.bol)
+      %acl
+      (scot %p host.gid)
+      /[name.gid]/noun
+    ==
+  ?~  u-acl  |
+  ?:  pub.u.u-acl
+    !(~(has in acl.u.u-acl) ship)
+  (~(has in acl.u.u-acl) ship)
 ::
 ++  get-members
   |=  =gid

@@ -35,7 +35,7 @@
   ?>  =(our.bol src.bol)
   =^  cards  state
     ?+  mark  (on-poke:def mark vase)
-      %squad-action        (handle-action !<(act vase))
+      %squad-do             (handle-action !<(act vase))
       %handle-http-request  (handle-http !<([@ta inbound-request:eyre] vase))
     ==
   [cards this]

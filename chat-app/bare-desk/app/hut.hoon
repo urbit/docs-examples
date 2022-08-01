@@ -1,10 +1,10 @@
-/-  *hut
-/+  *mip, default-agent, dbug, agentio
+/-  *hut, *squad
+/+  default-agent, dbug, agentio
 |%
 +$  versioned-state
   $%  state-0
   ==
-+$  state-0  [%0 =huts =ppl]
++$  state-0  [%0 =huts =msg-jar =joined]
 +$  card  card:agent:gall
 --
 ::
@@ -12,10 +12,12 @@
 =|  state-0
 =*  state  -
 ^-  agent:gall
+=<
 |_  bol=bowl:gall
 +*  this  .
     def   ~(. (default-agent this %.n) bol)
     io    ~(. agentio bol)
+    hc    ~(. +> bol)
 ++  on-init  on-init:def
 ++  on-save  !>(state)
 ++  on-load
@@ -35,59 +37,48 @@
     ^-  (quip card _this)
     ?-    -.act
         %post
-      =/  =path  /(scot %p host.hut.act)/[name.hut.act]
-      ?.  =(our.bol host.hut.act)
+      =/  =path
+        /(scot %p host.gid.hut.act)/[name.gid.hut.act]/[name.hut.act]
+      ?.  =(our.bol host.gid.hut.act)
         :_  this
-        :~  (~(poke pass:io path) [host.hut.act %hut] [mark vase])
+        :~  (~(poke pass:io path) [host.gid.hut.act %hut] [mark vase])
         ==
-      =/  =msgs  (~(got by huts) hut.act)
+      =/  =msgs  (~(get ja msg-jar) hut.act)
       =.  msgs
         ?.  (lte 50 (lent msgs))
           [msg.act msgs]
         [msg.act (snip msgs)]
-      :_  this(huts (~(put by huts) hut.act msgs))
-      :~  (fact:io hut-did+!>(`upd`[%post msg.act]) ~[path])
+      :_  this(msg-jar (~(put by msg-jar) hut.act msgs))
+      :~  (fact:io [mark vase] path /all ~)
       ==
     ::
         %join
-      ?<  =(our.bol host.hut.act)
-      =/  =path  /(scot %p host.hut.act)/[name.hut.act]
+      ?<  =(our.bol host.gid.hut.act)
+      =/  =path
+        /(scot %p host.gid.hut.act)/[name.gid.hut.act]/[name.hut.act]
       :_  this
-      :~  (~(watch pass:io path) [host.hut.act %hut] path)
+      :~  (~(watch pass:io path) [host.gid.hut.act %hut] path)
       ==
     ::
         %quit
-      =/  =path  /(scot %p host.hut.act)/[name.hut.act]
-      :-  ?:  =(our.bol host.hut.act)
-            :~  (kick:io ~[path])
-            ==
-          :~  (kick:io ~[path])
-              (~(leave pass:io path) [host.hut.act %hut])
-          ==
+      =/  =path
+        /(scot %p host.gid.hut.act)/[name.gid.hut.act]/[name.hut.act]
+      :-  :-  (fact:io [mark vase] /all ~)
+          ?:  =(our.bol host.gid.hut.act)
+            ~
+          [(~(leave pass:io path) [host.gid.hut.act %hut]) ~]
       %=  this
-        huts  (~(del by huts) hut.act)
-        ppl   (~(del by ppl) hut.act)
-      ==
-    ::
-        %ship
-      =/  =path  /(scot %p host.hut.act)/[name.hut.act]
-      ?>  =(our.bol host.hut.act)
-      :_  this(ppl (~(put bi ppl) hut.act who.act %.n))
-      :~  (fact:io hut-did+!>(`upd`[%ship who.act]) ~[path])
-      ==
-    ::
-        %kick
-      =/  =path  /(scot %p host.hut.act)/[name.hut.act]
-      ?>  =(our.bol host.hut.act)
-      ?<  =(our.bol who.act)
-      :_  this(ppl (~(del bi ppl) hut.act who.act))
-      :~  (kick-only:io who.act ~[path])
-          (fact:io hut-did+!>(`upd`[%kick who.act]) ~[path])
+        huts     (~(del by huts) gid.hut.act)
+        msg-jar  (~(del by msg-jar) hut.act)
+        joined   (~(del by joined) hut.act)
       ==
     ::
         %make
-      ?<  (~(has by huts) hut.act)
-      :-  ~
+      ?<  (~(has ju huts) gid.hut.act name.hut.act)
+      ?>  ?=  ^
+          .^  ()
+      :-  :~  (fact:io hut-did+!>(`hut-upd`[%init hut.act]))
+          ==
       %=  this
         huts  (~(put by huts) hut.act ~)
         ppl   (~(put bi ppl) hut.act our.bol %.y)
@@ -240,4 +231,37 @@
 ::
 ++  on-arvo  on-arvo:def
 ++  on-fail  on-fail:def
+--
+::
+|_  bol=bowl:gall
+++  has-squad
+  |=  =gid
+  ^-  ?
+  ?=  ^
+  .^  (unit *)
+    %gx
+    (scot %p our.bol)
+    %squad
+    (scot %da now.bol)
+    %squad
+    (scot %p host.gid)
+    /[name.gid]/noun
+  ==
+++  is-allowed
+  |=  [=gid =ship]
+  ^-  ?
+  =/  u-acl=(unit [pub=? acl=ppl])
+    .^  (unit *)
+      %gx
+      (scot %p our.bol)
+      %squad
+      (scot %da now.bol)
+      %acl
+      (scot %p host.gid)
+      /[name.gid]/noun
+    ==
+  ?~  u-acl  |
+  ?:  pub.u.u-acl
+    !(~(has in acl.u.u-acl) ship)
+  (~(has in acl.u.u-acl) ship)
 --

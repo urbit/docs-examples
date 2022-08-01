@@ -1,24 +1,21 @@
-/+  *mip
 |%
-+$  msg    [who=@p what=@t]
-+$  msgs   (list msg)
-+$  hut    [host=@p name=@tas]
-+$  huts   (jar hut msg)
-+$  ppl    (mip hut @p ?)
-+$  act
++$  msg      [who=@p what=@t]
++$  msgs     (list msg)
++$  name     @tas
++$  hut      [=gid =name]
+::
++$  huts     (jug gid name)
++$  msg-jar  (jar hut msg)
++$  joined   (jug hut @p)
+::
++$  hut-act
   $%  [%make =hut]
       [%post =hut =msg]
-      [%ship =hut who=@p]
-      [%kick =hut who=@p]
-      [%join =hut]
-      [%quit =hut]
+      [%join =hut who=@p]
+      [%quit =hut who=@p]
   ==
-+$  upd
-  $%  [%init ppl=(map @p ?) =msgs]
-      [%post =msg]
-      [%ship who=@p]
-      [%kick who=@p]
-      [%join who=@p]
-      [%quit who=@p]
++$  hut-upd
+  $%  [%init =hut ppl=(set @p) =msgs]
+      hut-act
   ==
 --
