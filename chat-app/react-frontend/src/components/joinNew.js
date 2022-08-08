@@ -2,32 +2,28 @@ import React, { Component } from 'react';
 
 class JoinNew extends Component {
 
-  handleKey = (e) =>
-  (e.key === "Enter") &&
-    !e.shiftKey &&
-    this.handleJoin(e.target.value);
-
-  handleJoin = join => {
-    const [host, name] = join.split('/');
-    this.props.patpValidate(host) &&
-      (/^[a-z][-a-z0-9]*$/.test(name)) &&
-      this.props.joinHut({host: host, name: name})
-  };
-
   render() {
+    const { our, huts, squads, joinSelect, setJoin, joinGid } = this.props;
     return (
       <p>
-        <label>join:</label>
-        <input
-          type="text"
-          placeholder="~sampel/name"
-          value={this.props.join}
-          onChange={e => this.props.setJoin(e.target.value)}
-          onKeyUp={this.handleKey}
-        />
+        <select onChange={setJoin} value={joinSelect}>
+          <option value="def">Select</option>
+          {
+            [...squads].filter(
+              ([gid, title]) => ((gid.host !== our) && !(huts.has(gid)))
+            ).map(([gid, title]) =>
+              <option value={gid.host + "/" + gid.name}>{title}</option>
+            )
+          }
+        </select>
+        <button Class="join-button" onClick={() => joinGid()}>
+          join
+        </button>
+ 
       </p>
     )
   }
-}
+};
 
 export default JoinNew;
+

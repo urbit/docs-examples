@@ -587,7 +587,6 @@
 ++  on-leave
   |=  =path
   ^-  (quip card _this)
-  ~&  sup.bol
   ?.  ?=([@ ~] path)  (on-leave:def path)
   ?:  |(=(src.bol our.bol) (~(any by sup.bol) |=([=@p *] =(src.bol p))))
     `this
@@ -599,7 +598,7 @@
 ++  on-peek
   |=  =path
   ^-  (unit (unit cage))
-  ?+    path  (on-peek:def)
+  ?+    path  (on-peek:def path)
       [%x %all ~]
     ``noun+!>([squads acls members])
   ::
@@ -630,6 +629,23 @@
       [%x %members @ @ ~]
     =/  =gid  [(slav %p i.t.t.path) i.t.t.t.path]
     ``noun+!>(`ppl`(~(get ju members) gid))
+  ::
+      [%x %titles ~]
+    :^  ~  ~  %json
+    !>  ^-  json
+    :-  %a
+    %+  turn
+      (sort ~(tap by squads) |=([[* a=@t *] [* b=@t *]] (aor a b)))
+    |=  [=gid =@t ?]
+    ^-  json
+    %-  pairs:enjs:format
+    :~  :-  'gid'
+        %-  pairs:enjs:format
+        :~  ['host' s+(scot %p host.gid)]
+            ['name' s+name.gid]
+        ==
+        ['title' s+t]
+    ==
   ==
 ::
 ++  on-arvo

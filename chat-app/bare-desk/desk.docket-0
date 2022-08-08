@@ -6,7 +6,5 @@
   website+'https://urbit.org'
   license+'MIT'
   base+'hut'
-  :+  %glob-http
-    'https://m.tinnus-napbus.xyz/pub/glob-0v2.bnmu5.nbsv9.rfi85.3etmm.o4sah.glob'
-  0v2.bnmu5.nbsv9.rfi85.3etmm.o4sah
+  glob-ames+[~zod 0v0]
 ==

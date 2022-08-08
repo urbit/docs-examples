@@ -3,14 +3,11 @@ import Urbit from "@urbit/http-api";
 import "./App.css";
 import ConnStatus from "./components/connStatus"
 import JoinNew from "./components/joinNew"
-import LeaveHut from "./components/leaveHut"
-import Allow from "./components/allow"
-import CreateHut from "./components/createHut"
+import SelectGid from "./components/selectGid"
+import Huts from "./components/huts"
 import ChatInput from "./components/chatInput"
 import People from "./components/people"
 import Messages from "./components/messages"
-import SelectHut from "./components/selectHut"
-import patpValidate from "./patpValidate";
 
 class App extends Component {
 
@@ -20,20 +17,17 @@ class App extends Component {
     window.urbit.ship = window.ship;
     this.our = "~" + window.ship;
     this.state = {
+      squads: new Map(),
+      huts:   new Map(),
+      msgJar: new Map(),
+      joined: new Map(),
+      currentGid: null,
+      currentHut: null,
       conn: null,
-      huts: [],
-      select: "def",
+      joinSelect: "def",
+      viewSelect: "def",
       make: "",
-      add: "",
-      id: null,
-      host: null,
-      name: null,
       msg: "",
-      msgs: [],
-      ppl: new Map(),
-      hover: null,
-      join: "",
-      areYouSure: false,
     };
     window.urbit.onOpen = () => this.setState({conn: "ok"});
     window.urbit.onRetry = () => this.setState({conn: "try"});
@@ -41,162 +35,187 @@ class App extends Component {
     this.bottom = React.createRef();
   };
 
-  componentDidMount() {this.getHuts()};
+  componentDidMount() {
+    this.getTitles();
+    this.subscribe();
+  };
 
   scrollToBottom = () => this.bottom.current.scrollIntoView();
 
-  getHuts = async () => {
-    const huts = await window.urbit.scry({app: "hut", path: "/huts"});
-    this.setState({huts: huts});
-  };
-
-  resetState = async () => {
-    const id = this.state.id;
-    (id !== null) && await window.urbit.unsubscribe(id);
-    await this.getHuts();
-    this.setState({
-      id: null,
-      host: null,
-      name: null,
-      msg: "",
-      msgs: [],
-      ppl: new Map(),
-      join: "",
-      add: "",
-      make: "",
-      areYouSure: false
+  subscribe = () => {
+    window.urbit.subscribe({
+      app: "hut",
+      path: "/all",
+      event: this.handleUpdate
     });
   };
 
-  doPoke = (jon, succ) => {
+  getTitles = async () => {
+    const titles = await window.urbit.scry({
+      app: "squad",
+      path: "/titles"
+    });
+    this.setState({squads: new Map(titles.map(obj => [obj.gid, obj.title]))})
+  }
+
+  handleUpdate = upd => {
+    const {huts, msgJar, joined, currentGid, currentHut} = this.state;
+    if ("init-all" in upd) {
+      this.setState({
+        huts: new Map(
+          upd.initAll.huts.map(obj => [obj.gid, new Set(obj.names)])
+        ),
+        msgJar: new Map(upd.initAll.msgJar.map(obj => [obj.hut, obj.msgs])),
+        joined: new Map(
+          upd.initAll.joined.map(obj => [obj.gid, new Set(obj.ppl)])
+        )
+      })
+    } else if ("init" in upd) {
+      upd.init.msgJar.forEach(obj => (msgJar.set(obj.hut, obj.msgs)));
+      this.setState({
+        msgJar: msgJar,
+        huts: huts.set(
+          upd.init.huts[0].gid,
+          new Set(upd.init.huts[0].names)
+        ),
+        joined: joined.set(
+          upd.init.joined[0].gid,
+          new Set(upd.init.joined[0].ppl)
+        )
+      })
+    } else if ("new" in upd) {
+      (huts.has(upd.new.hut.gid))
+        ? huts.get(upd.new.hut.gid).add(upd.new.hut.name)
+        : huts.set(upd.new.hut.gid, new Set([upd.new.hut.name]));
+      this.setState({
+        huts: huts,
+        msgJar: msgJar.set(upd.new.hut, upd.new.msgs)
+      })
+    } else if ("post" in upd) {
+      (msgJar.has(upd.post.hut))
+        ? msgJar.get(upd.post.hut).push(upd.post.msg)
+        : msgJar.set(upd.post.hut, [upd.post.msg]);
+      this.setState({msgJar: msgJar})
+    } else if ("join" in upd) {
+      (joined.has(upd.join.gid))
+        ? joined.get(upd.join.gid).add(upd.join.who)
+        : joined.set(upd.join.gid, new Set([upd.join.who]));
+      this.setState({joined: joined})
+    } else if ("quit" in upd) {
+      if ("~" + window.ship === upd.quit.who) {
+        (huts.has(upd.quit.gid)) &&
+          huts.get(upd.quit.gid).forEach(name =>
+            msgJar.delete({gid: upd.quit.gid, name: name})
+          );
+        huts.delete(upd.quit.gid);
+        joined.delete(upd.quit.gid);
+        this.setState({
+          msgJar: msgJar,
+          huts: huts,
+          joined: joined,
+          currentGid: (currentGid === upd.quit.gid)
+            ? null : currentGid,
+          currentHut: (currentHut.gid === upd.quit.gid)
+            ? null : currentHut,
+          make: (currentGid === upd.quit.gid) ? "" : this.state.make
+        })
+      } else {
+        (joined.has(upd.quit.gid)) &&
+          joined.get(upd.quit.gid).delete(upd.quit.who);
+        this.setState({joined: joined})
+      }
+    } else if ("del" in upd) {
+      (huts.has(upd.del.hut.gid)) &&
+        huts.get(upd.del.hut.gid).delete(upd.del.hut.name);
+      msgJar.delete(upd.del.hut);
+      this.setState({
+        huts: huts,
+        msgJar: msgJar,
+        currentHut: (currentHut === upd.del.hut) ? null : currentHut
+      })
+    }
+  };
+
+  changeGid = str => {
+    if (str === "def") {
+      this.setState({currentGid: null, currentHut: null})
+    } else {
+      const [host, name] = str.split("/");
+      this.setState({
+        currentGid: {host: host, name: name},
+        currentHut: null,
+        make: ""
+      })
+    };
+  };
+
+  changeHut = hut => {
+    this.setState({
+      currentHut: hut,
+      msg: ""
+    });
+  };
+
+  doPoke = jon => {
     window.urbit.poke({
       app: "hut",
       mark: "hut-do",
       json: jon,
-      onSuccess: succ
     })
   };
 
-  openHut = async hut => {
-    await this.resetState();
-    const newID = await window.urbit.subscribe({
-      app: "hut",
-      path: "/" + hut.host + "/" + hut.name,
-      event: this.handleUpdate,
-      quit: () => (this.state.host === hut.host) &&
-        this.openHut(hut),
-      err: () => this.resetState()
-    });
-    this.setState({
-        id: newID,
-        host: hut.host,
-        name: hut.name,
-        select: hut.host + "/" + hut.name,
-    })
-  };
-
-  joinHut = async hut => {
-    if (hut.host === this.our) return;
+  joinGid = () => {
+    const joinSelect = this.state.joinSelect
+    if (joinSelect === "def") return;
+    const [host, name] = joinSelect.split("/");
     this.doPoke(
-      {"join": {"host": hut.host, "name": hut.name}},
-      () => this.openHut(hut)
-    )
-  };
-
-  leaveHut = async () => {
-    const { host, name } = this.state;
-    if (host === null) return;
-    this.doPoke(
-      {"quit": {"host": host, "name": name}},
-      this.resetState
+      {"join": {
+        "gid" : {"host": host, "name": name},
+        "who" : this.our
+      }}
     );
+    this.setState({joinSelect: "def"})
+  };
+
+  leaveGid = () => {
+    const currentGid = this.state.currentGid;
+    if (currentGid === null) return;
+    this.doPoke({"quit": {"gid": currentGid, "who": this.our}})
   };
 
   postMsg = () => {
-    const { msg, host, name } = this.state;
+    const { msg, currentHut } = this.state;
     const trimmed = msg.trim();
-    (trimmed !== "") &&
+    if (trimmed !== "" && currentHut !== null) {
       this.doPoke(
         {
           "post": {
-            "hut": {"host": host, "name": name},
+            "hut": currentHut,
             "msg": {"who": this.our, "what": msg}
           }
-        },
-        () => this.setState({msg: ""})
-      )
+        }
+      );
+      this.setState({msg: ""})
+    }
   };
 
   makeHut = () => {
     const { make } = this.state;
+    const trimmed = make.trim();
+    if (trimmed === "") return;
     this.doPoke(
-      {"make": {"host": this.our, "name": make}},
-      () => {
-        this.getHuts();
-        this.setState({
-          select: this.our + "/" + make,
-          make: ""
-        });
-        this.openHut({host: this.our, name: make})
-      }
-    )
+      {"new": {
+        "hut": {"host": this.our, "name": make},
+        "msgs": []
+      }}
+    );
+    this.setState({make: ""})
   };
 
-  addShip = () => {
-    const { add, host, name } = this.state;
-    (host === this.our && patpValidate(add)) &&
-      this.doPoke(
-        {
-          "ship": {
-            "hut": {"host": host, "name": name},
-            "who": add
-          }
-        },
-        () => this.setState({add: ""})
-      )
-  };
-
-  kickShip = ship => {
-    const { host, name } = this.state;
-    (host === this.our && ship !== this.our) &&
-      this.doPoke(
-        {
-          "kick": {
-            "hut": {"host": host, "name": name},
-            "who": ship
-          }
-        }, () => null
-      )
-  };
-
-  handleUpdate = upd => {
-    const { ppl, msgs } = this.state;
-    if ("init" in upd)
-      this.setState({
-        msgs: upd.init.msgs,
-        ppl: new Map(upd.init.ppl)
-      }, () => {
-        this.scrollToBottom()
-      });
-    else if ("join" in upd)
-      this.setState({ppl: ppl.set(upd.join, true)});
-    else if ("quit" in upd)
-      this.setState({ppl: ppl.set(upd.quit, false)});
-    else if ("ship" in upd)
-      this.setState({ppl: ppl.set(upd.ship, false)});
-    else if ("post" in upd)
-      this.setState({
-        msgs: [...msgs.slice(-49), upd.post]
-      }, () => {
-        this.scrollToBottom()
-      });
-    else if ("kick" in upd)
-      if (this.our === upd.kick)
-        this.setState({select: "def"}, () => this.resetState());
-      else {
-        ppl.delete(upd.kick);
-        this.setState({ppl: ppl})
-      }
+  deleteHut = () => {
+    const { currentHut } = this.state;
+    if (currentHut === null || currentHut.gid.host !== this.our) return;
+    this.doPoke({"del": {"hut": currentHut}});
   };
 
   patpShorten = patp => {
@@ -216,58 +235,47 @@ class App extends Component {
       <React.Fragment>
         <ConnStatus conn={this.state.conn}/>
         <header>
-          <SelectHut
+          <JoinNew
+            our={this.our}
             huts={this.state.huts}
-            select={this.state.select}
-            setSelect={e => this.setState({select: e})}
-            openHut={this.openHut}
-            patpShorten={this.patpShorten}
+            squads={this.state.squads}
+            joinSelect={this.state.joinSelect}
+            setJoin={e => this.setState({joinSelect: e})}
+            joinGid={this.joinGid}
           />
-          <CreateHut
+        </header>
+        <SelectGid
+          currentGid={this.state.currentGid}
+          our={this.our}
+          titles={this.state.squads}
+          huts={this.state.huts}
+          leaveGid={this.leaveHut}
+          changeGid={this.changeGid}
+          patpShorten={this.patpShorten}
+          viewSelect={this.state.viewSelect}
+          currentHut={this.state.currentHut}
+          deleteHut={this.deleteHut}
+        />
+        <main>
+          <Huts
+            currentHut={this.state.currentHut}
+            currentGid={this.state.currentGid}
+            huts={this.state.huts}
+            our={this.our}
+            changeHut={this.changeHut}
             make={this.state.make}
             setMake={e => this.setState({make: e})}
             makeHut={this.makeHut}
           />
-          <JoinNew
-            join={this.state.join}
-            joinHut={this.joinHut}
-            setJoin={e => this.setState({join: e})}
-            patpValidate={patpValidate}
-          />
-          <Allow
-            host={this.state.host}
-            add={this.state.add}
-            our={this.our}
-            setAdd={e => this.setState({add: e})}
-            addShip={this.addShip}
-          />
-          <LeaveHut
-            host={this.state.host}
-            our={this.our}
-            areYouSure={this.state.areYouSure}
-            leaveHut={this.leaveHut}
-            setAreYouSure={() => this.setState({areYouSure: true})}
-          />
-        </header>
-          <div Class="hut">
-            {
-              (this.state.host !== null) &&
-                this.patpShorten(this.state.host) + '/' + this.state.name
-            }
-          </div>
-        <main>
           <Messages
-            msgs={this.state.msgs}
+            currentHut={this.state.currentHut}
+            msgJar={this.state.msgJar}
             bottom={this.bottom}
             patpShorten={this.patpShorten}
           />
           <People
-            ppl={this.state.ppl}
-            hover={this.state.hover}
-            host={this.state.host}
-            our={this.our}
-            setHover={e => this.setState({hover: e})}
-            kickShip={this.kickShip}
+            joined={this.state.joined}
+            currentHut={this.state.currentHut}
             patpShorten={this.patpShorten}
           />
         </main>

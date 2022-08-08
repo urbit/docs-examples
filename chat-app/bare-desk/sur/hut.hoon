@@ -1,3 +1,4 @@
+/-  *squad
 |%
 +$  msg      [who=@p what=@t]
 +$  msgs     (list msg)
@@ -6,16 +7,18 @@
 ::
 +$  huts     (jug gid name)
 +$  msg-jar  (jar hut msg)
-+$  joined   (jug hut @p)
++$  joined   (jug gid @p)
 ::
 +$  hut-act
-  $%  [%make =hut]
+  $%  [%new =hut =msgs]
       [%post =hut =msg]
-      [%join =hut who=@p]
-      [%quit =hut who=@p]
+      [%join =gid who=@p]
+      [%quit =gid who=@p]
+      [%del =hut]
   ==
 +$  hut-upd
-  $%  [%init =hut ppl=(set @p) =msgs]
+  $%  [%init =huts =msg-jar =joined]
+      [%init-all =huts =msg-jar =joined]
       hut-act
   ==
 --

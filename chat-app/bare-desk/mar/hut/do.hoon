@@ -1,26 +1,25 @@
 /-  *hut
-|_  a=act
+|_  a=hut-act
 ++  grow
   |%
   ++  noun  a
   --
 ++  grab
   |%
-  ++  noun  act
+  ++  noun  hut-act
   ++  json
     =,  dejs:format
-    |=  jon=json
-    |^  ^-  act
-    %.  jon
+    |^  ^-  hut-act
     %-  of
-    :~  join+de-hut
-        quit+de-hut
-        make+de-hut
-        ship+(ot ~[hut+de-hut who+(se %p)])
-        kick+(ot ~[hut+de-hut who+(se %p)])
-        post+(ot ~[hut+de-hut msg+(ot ~[who+(se %p) what+so])])
+    :~  new+(ot ~[hut+de-hut msgs+(ar de-msg)])
+        post+(ot ~[hut+de-hut msg+de-msg])
+        join+(ot ~[gid+de-gid who+(se %p)])
+        quit+(ot ~[gid+de-gid who+(se %p)])
+        del+(ot ~[hut+de-hut])
     ==
-    ++  de-hut  (ot ~[host+(se %p) name+(su sym)])
+    ++  de-msg  (ot ~[who+(se %p) what+so])
+    ++  de-hut  (ot ~[gid+de-gid name+(se %tas)])
+    ++  de-gid  (ot ~[host+(se %p) name+(se %tas)])
     --
   --
 ++  grad  %noun
