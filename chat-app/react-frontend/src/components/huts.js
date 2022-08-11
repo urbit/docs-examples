@@ -16,32 +16,41 @@ class Huts extends Component {
 
   render() {
     const { currentHut, currentGid, huts, our, make, changeHut } = this.props;
+    if (currentGid === null) return;
     const theseHuts = (huts.has(currentGid))
-          ? [...huts.get(currentGid)].map(name => {
-            return {gid: currentGid, name: name}
-          })
+          ? [...huts.get(currentGid)].map(name => currentGid + "/" + name)
           : []
     return (
-      <div Class="hut-list">
+      <div Class="left-menu">
         {
-          (currentGid.host === our) &&
-            <div Class="make-hut">
-              <input
-                placeholder="my-hut123"
-                type="text"
-                value={make}
-                onChange={this.handleChange}
-                onKeyUp={this.handleKey}
-              />
-            </div>
+          (currentGid !== null) &&
+            (currentGid.split("/")[0] === our) &&
+            <input
+              Class="make-hut"
+              placeholder="new-hut123"
+              type="text"
+              value={make}
+              onChange={this.handleChange}
+              onKeyUp={this.handleKey}
+            />
         }
-        {
-          theseHuts.map(hut =>
-            <div key={hut} onClick={() => changeHut(hut)}>
-              {(hut === currentHut) ? <strong>{hut.name}</strong> : hut.name}
-            </div>
-          )
-        }
+        <div Class="hut-list">
+          {
+            theseHuts.map(hut =>
+              <div
+                Class={(hut === currentHut) ? "current-hut" : "other-hut"}
+                key={hut}
+                onClick={() => changeHut(hut)}
+              >
+                {
+                  (hut === currentHut)
+                    ? <strong>{hut.split("/")[2]}</strong>
+                  : hut.split("/")[2]
+                }
+              </div>
+            )
+          }
+        </div>
       </div>
     )
   }

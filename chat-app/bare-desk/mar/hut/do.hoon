@@ -9,7 +9,9 @@
   ++  noun  hut-act
   ++  json
     =,  dejs:format
+    |=  jon=json
     |^  ^-  hut-act
+    %.  jon
     %-  of
     :~  new+(ot ~[hut+de-hut msgs+(ar de-msg)])
         post+(ot ~[hut+de-hut msg+de-msg])

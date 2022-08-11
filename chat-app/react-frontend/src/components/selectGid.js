@@ -2,45 +2,64 @@ import React, { Component } from 'react';
 
 class SelectGid extends Component {
 
-  handleClick = () => {
-    if (this.props.currentGid.host === this.props.our) {
-      (this.props.currentHut !== null) && this.props.deleteHut()
-    } else this.props.leaveGid();
-  }
   render() {
     const {
       our,
-      titles,
       huts,
-      currentGid,
+      squads,
+      titles,
       changeGid,
+      currentGid,
       patpShorten,
       viewSelect,
+      joinSelect,
+      setJoin,
+      joinGid
     } = this.props;
     return (
-      <div Class="selectgid">
+      <div Class="top-bar">
         <select
+          Class="gid-select"
           onChange={e => changeGid(e.target.value)}
           value={viewSelect}>
-          <option value="def">Select</option>
+          <option value="def">---squad---</option>
           {
-            [...huts.keys()].map(gid =>
-              <option value={gid.host + "/" + gid.name}>
+            [...huts.keys()].map((gidStr) =>
+              <option value={gidStr}>
                 {
-                  (titles.has(gid))
-                    ? titles.get(gid)
-                    : patpShorten(gid.host) + "/" + gid.name
+                  (titles.has(gidStr))
+                    ? titles.get(gidStr)
+                    : patpShorten(gidStr.split("/")[0])
+                      + "/" + gidStr.split("/")[1]
                 }
               </option>
             )
           }
         </select>
-        <button
-          Class="leave-button"
-          onClick={() => (window.confirm('Are you sure?')) && this.handleClick()}
-        >
-          {(currentGid.host === our) ? "Delete Hut" : "Leave"}
-        </button>
+        {
+          (currentGid !== null) &&
+            <span Class="gid-title">
+              {
+                squads.has(currentGid) ? squads.get(currentGid) : currentGid
+              }
+            </span>
+        }
+        <span Class="join-span">
+          <select Class="join-select" onChange={setJoin} value={joinSelect}>
+            <option value="def">select</option>
+            {
+              [...squads].filter(
+                ([gidStr, title]) =>
+                ((gidStr.split("/")[0] !== our) && !(huts.has(gidStr)))
+              ).map(([gidStr, title]) =>
+                <option value={gidStr}>{title}</option>
+              )
+            }
+          </select>
+          <button Class="join-button" onClick={() => joinGid()}>
+            join
+          </button>
+        </span>
       </div>
     )
   }

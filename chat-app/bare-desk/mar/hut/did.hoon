@@ -74,16 +74,17 @@
     ++  en-msg
       |=  =msg
       ^-  ^json
-      (pairs ~[['who' s+(scot %p host.gid)] ['what' s+what.msg]])
+      (pairs ~[['who' s+(scot %p who.msg)] ['what' s+what.msg]])
     ++  en-hut
       |=  =hut
       ^-  ^json
-      (pairs ~[['gid' (en-gid gid.hut)] ['name' name.hut]])
+      (pairs ~[['gid' (en-gid gid.hut)] ['name' s+name.hut]])
     ++  en-gid
       |=  =gid
       ^-  ^json
       (pairs ~[['host' s+(scot %p host.gid)] ['name' s+name.gid]])
     --
+  --
 ++  grab
   |%
   ++  noun  hut-upd

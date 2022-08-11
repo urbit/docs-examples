@@ -8,17 +8,18 @@ class ChatInput extends Component {
     this.props.postMsg();
 
   render() {
-    const {our, msg} = this.props;
+    const {our, msg, currentHut} = this.props;
     return (
-      <div Class="input">
-        <strong Class="our">{this.props.patpShorten(our)}</strong>
-        <textarea
-          value={msg}
-          onChange={e => this.props.setMsg(e.target.value)}
-          onKeyUp={this.handleKey}
-        >
-        </textarea>
-      </div>
+      (currentHut !== null) &&
+        <div Class="input">
+          <strong Class="our">{this.props.patpShorten(our)}</strong>
+          <textarea
+            value={msg}
+            onChange={e => this.props.setMsg(e.target.value)}
+            onKeyUp={this.handleKey}
+          >
+          </textarea>
+        </div>
     )
   }
 }

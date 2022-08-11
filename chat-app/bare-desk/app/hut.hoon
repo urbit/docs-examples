@@ -53,7 +53,7 @@
           [msg.act msgs]
         [msg.act (snip msgs)]
       :_  this(msg-jar (~(put by msg-jar) hut.act msgs))
-      :~  (fact:io [mark vase] path /all ~)
+      :~  (fact:io hut-did+vase path /all ~)
       ==
     ::
         %join
@@ -74,7 +74,7 @@
         |-
         ?~  to-rm  msg-jar
         $(to-rm t.to-rm, msg-jar (~(del by msg-jar) i.to-rm))
-      :-  :-  (fact:io [mark vase] /all ~)
+      :-  :-  (fact:io hut-did+vase /all ~)
           ?:  =(our.bol host.gid.act)
             ~
           ~[(~(leave-path pass:io path) [host.gid.act %hut] path)]
@@ -323,7 +323,7 @@
           msg-jar.upd
         $(to-rm t.to-rm, msg-jar.upd (~(del by msg-jar.upd) hut.i.to-rm))
       :-  :~  %+  fact:io
-                hut-did+!>(`hut-upd`[%init huts.upd msg-jar joined.upd])
+                hut-did+!>(`hut-upd`[%init huts.upd msg-jar.upd joined.upd])
               ~[/all]
           ==
       %=  this
@@ -403,7 +403,7 @@
       %-  ~(gas by *^msg-jar)
       %+  turn  hut-list
       |=(=hut `[^hut msgs]`[hut (~(get ja msg-jar) hut)])
-    (~(put by *^joined) gid (~(get ju joined) gid))
+    (~(put by *^joined) gid (~(put in (~(get ju joined) gid)) src.bol))
   --
 ::
 ++  on-leave

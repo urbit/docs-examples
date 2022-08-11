@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 
 class Messages extends Component {
+
   render() {
     const { msgJar, bottom, patpShorten, currentHut } = this.props;
     const msgs = msgJar.has(currentHut) ? msgJar.get(currentHut) : [];

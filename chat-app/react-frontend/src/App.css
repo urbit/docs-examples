@@ -2,7 +2,7 @@
   color-scheme: dark;
 }
 body {
-  background-color: #181818;
+  background-color: #202020;
   color: #d8d8d8;
   margin: 0;
   height: 100vh;
@@ -18,26 +18,90 @@ div#root {
   width: 100%;
   max-width: 100%;
   padding: 2ch;
+  display: flex;
+  flex-direction: column;
+  justify-content: stretch;
+}
+.top-bar {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin: 1em 0;
+}
+.gid-title {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  overflow: hidden;
+  margin: 0 1ch;
+}
+.join-span {
+  display: block;
+  white-space: nowrap;
+}
+.join-select {
+  background-color: #787878;
+  color: black;
+  width: 9ch;
+  text-overflow: ellipsis;
+}
+.join-button {
+  background-color: #6b6b6b;
+  color: black;
+  border: none;
+  width: 5ch;
+  margin: 0;
+  padding: 1;
+  cursor: pointer;
 }
 main {
+  flex: 1 1 auto;
   display: flex;
   flex-direction: row;
   justify-content: stretch;
   height: calc(100% - 16em);
+  width: 100%;
 }
-.hut {
-  height: 2em;
-  line-height: 2em;
-  font-weight: bold;
-  border-top: 1px solid #585858;
-  border-bottom: 1px solid #585858;
+.left-menu {
+  width: 14ch;
+  overflow: hidden;
+  flex: 0 0 auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: stretch;
+}
+.hut-list {
+  margin-top: auto;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+.make-hut {
+  width: 13ch;
+  flex: 0 0 auto;
+  display: block;
+}
+.content {
+  flex: 1 1 auto;
+  background-color: #181818;
+  display: flex;
+  flex-direction: column;
+  justify-content: stretch;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(216, 216, 216, 0.3);
 }
 .msgs {
-  flex: 1 1 auto;
   height: 100%;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
 }
 .msg {
   margin: 0.4em 0.4em 0 16ch;
@@ -54,20 +118,19 @@ main {
   overflow-wrap: break-word;
   text-overflow: ellipsis;
 }
-.ppl {
+.right-menu {
   height: 100%;
-  margin-top: 5px;
   width: 16ch;
-  padding-left: 2ch;
   flex: 0 0 auto;
-  overflow-y: auto;
+  padding-left: 2ch;
+  display: flex;
+  flex-direction: column;
+  justify-content: stretch;
 }
-input, textarea {
-  background-color: #383838;
-  border: none;
-  color: #d8d8d8;
-}
-button {
+.leave-button {
+  flex: 0 0 auto;
+  width: 100%;
+  margin-bottom: 1em;
   background-color: #ab4642;
   color: #d8d8d8;
   border: none;
@@ -75,12 +138,15 @@ button {
   cursor: pointer;
   width: 14ch;
 }
-.kick {
-  white-space: pre;
-  color: #ab4642;
-  background-color: #181818;
+.ppl {
+  flex: 1 1 auto;
+  margin-top: 5px;
+  overflow-y: auto;
+}
+input, textarea {
+  background-color: #383838;
   border: none;
-  padding: 0;
+  color: #d8d8d8;
 }
 .our {
   width: 14ch;
@@ -91,23 +157,24 @@ button {
   margin-right: 2ch;
 }
 .input {
+  flex: 0 0 auto;
   display: flex;
   flex-direction: row;
   justify-content: stretch;
-  height: 4em;
-  margin-top: 1em;
+  height: 6em;
+  margin: 1em 0;
 }
 textarea {
   flex: 1 1 auto;
+  border-radius: 10px;
+  margin-right: 1em;
+  resize: none;
 }
-header {
-  height: 9em;
-}
-header p {margin: 0.4em;}
-header input {width: 14ch}
 select {
   background-color: #787878;
   color: black;
+  border: 0;
+  cursor: pointer;
 }
 .fix {flex: 1 1 auto}
 label {
@@ -115,19 +182,53 @@ label {
   width: 8ch;
 }
 .conn {
-  width: fit-content;
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: 999;
+  flex: 0 0 auto;
   font-size: 0.9em;
-  padding: 3px;
+  text-align: right;
 }
 .out {color: rgba(216, 216, 216, 0.5)}
+.current-hut {
+  color: rgb(161, 181, 108);
+  background-color: #181818;
+  border-radius: 6px;
+  border: 1px solid rgba(216, 216, 216, 0.3);
+}
+.other-hut {
+  color: rgba(216, 216, 216, 0.5);
+  border: 1px solid #202020;
+}
+.other-hut:hover {
+  color: #d8d8d8;
+}
+.current-hut, .other-hut {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 10px 0.5ch;
+  margin-right: 1ch;
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+.current-hut:first-child, .other-hut:first-child {
+  margin-top: auto;
+}
+.current-hut:last-child, .other-hut:last-child {
+  margin-bottom: auto;
+}
+.selectgid {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+.gid-select {
+  width: 13ch;
+}
 @media only screen and (max-width: 800px) {
-  .ppl {display: none}
+  .right-menu {display: none}
   .our {display: none}
-  .msg {margin-left: 0; text-indent: initial}
+  textarea {margin-left: 1em}
+  .msg {margin-left: 1ch; text-indent: initial}
   .who {width: initial}
   select {max-width: 14ch}
 }
