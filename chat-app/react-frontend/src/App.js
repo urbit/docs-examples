@@ -2,15 +2,11 @@ import React, {Component} from "react";
 import Urbit from "@urbit/http-api";
 import "./App.css";
 import ConnStatus from "./components/connStatus"
-import JoinNew from "./components/joinNew"
-import LeaveHut from "./components/leaveHut"
-import Allow from "./components/allow"
-import CreateHut from "./components/createHut"
+import SelectGid from "./components/selectGid"
+import Huts from "./components/huts"
 import ChatInput from "./components/chatInput"
 import People from "./components/people"
 import Messages from "./components/messages"
-import SelectHut from "./components/selectHut"
-import patpValidate from "./patpValidate";
 
 class App extends Component {
 
@@ -20,20 +16,17 @@ class App extends Component {
     window.urbit.ship = window.ship;
     this.our = "~" + window.ship;
     this.state = {
+      squads: new Map(),
+      huts:   new Map(),
+      msgJar: new Map(),
+      joined: new Map(),
+      currentGid: null,
+      currentHut: null,
       conn: null,
-      huts: [],
-      select: "def",
+      joinSelect: "def",
+      viewSelect: "def",
       make: "",
-      add: "",
-      id: null,
-      host: null,
-      name: null,
       msg: "",
-      msgs: [],
-      ppl: new Map(),
-      hover: null,
-      join: "",
-      areYouSure: false,
     };
     window.urbit.onOpen = () => this.setState({conn: "ok"});
     window.urbit.onRetry = () => this.setState({conn: "try"});
@@ -41,162 +34,250 @@ class App extends Component {
     this.bottom = React.createRef();
   };
 
-  componentDidMount() {this.getHuts()};
+  componentDidMount() {
+    this.subscribe();
+    this.getTitles();
+  };
 
   scrollToBottom = () => this.bottom.current.scrollIntoView();
 
-  getHuts = async () => {
-    const huts = await window.urbit.scry({app: "hut", path: "/huts"});
-    this.setState({huts: huts});
+  gidToStr = gid => gid.host + "/" + gid.name;
+  hutToStr = hut => {
+    return hut.gid.host + "/" + hut.gid.name + "/" + hut.name;
   };
 
-  resetState = async () => {
-    const id = this.state.id;
-    (id !== null) && await window.urbit.unsubscribe(id);
-    await this.getHuts();
-    this.setState({
-      id: null,
-      host: null,
-      name: null,
-      msg: "",
-      msgs: [],
-      ppl: new Map(),
-      join: "",
-      add: "",
-      make: "",
-      areYouSure: false
+  subscribe = () => {
+    window.urbit.subscribe({
+      app: "hut",
+      path: "/all",
+      event: this.handleUpdate
     });
   };
 
-  doPoke = (jon, succ) => {
+  getTitles = async () => {
+    const huts = this.state.huts;
+    const titles = await window.urbit.scry({
+      app: "squad",
+      path: "/titles"
+    });
+    titles.forEach(obj => {
+      const gidStr = this.gidToStr(obj.gid);
+      !huts.has(gidStr)
+        && (obj.gid.host === this.our)
+        && huts.set(gidStr, new Set())
+    })
+    this.setState({
+      squads: new Map(titles.map(obj =>
+        [this.gidToStr(obj.gid), obj.title]
+      )),
+      huts: huts
+    })
+  }
+
+  handleUpdate = upd => {
+    const {huts, msgJar, joined, currentGid, currentHut} = this.state;
+    if ("initAll" in upd) {
+      upd.initAll.huts.forEach(obj =>
+        huts.set(this.gidToStr(obj.gid), new Set(obj.names))
+      );
+      this.setState({
+        huts: huts,
+        msgJar: new Map(
+          upd.initAll.msgJar.map(obj => [this.hutToStr(obj.hut), obj.msgs])
+        ),
+        joined: new Map(
+          upd.initAll.joined.map(obj =>
+            [this.gidToStr(obj.gid), new Set(obj.ppl)]
+          )
+        )
+      })
+    } else if ("init" in upd) {
+      upd.init.msgJar.forEach(obj =>
+        msgJar.set(this.hutToStr(obj.hut), obj.msgs)
+      );
+      this.setState({
+        msgJar: msgJar,
+        huts: huts.set(
+          this.gidToStr(upd.init.huts[0].gid),
+          new Set(upd.init.huts[0].names)
+        ),
+        joined: joined.set(
+          this.gidToStr(upd.init.joined[0].gid),
+          new Set(upd.init.joined[0].ppl)
+        )
+      })
+    } else if ("new" in upd) {
+      const gidStr = this.gidToStr(upd.new.hut.gid);
+      const hutStr = this.hutToStr(upd.new.hut);
+      (huts.has(gidStr))
+        ? huts.get(gidStr).add(upd.new.hut.name)
+        : huts.set(gidStr, new Set(upd.new.hut.name));
+      this.setState({
+        huts: huts,
+        msgJar: msgJar.set(hutStr, upd.new.msgs)
+      })
+    } else if ("post" in upd) {
+      const hutStr = this.hutToStr(upd.post.hut);
+      (msgJar.has(hutStr))
+        ? msgJar.get(hutStr).push(upd.post.msg)
+        : msgJar.set(hutStr, [upd.post.msg]);
+      this.setState(
+        {msgJar: msgJar},
+        () => {
+          (hutStr === this.state.currentHut)
+            && this.scrollToBottom();
+        }
+      )
+    } else if ("join" in upd) {
+      const gidStr = this.gidToStr(upd.join.gid);
+      (joined.has(gidStr))
+        ? joined.get(gidStr).add(upd.join.who)
+        : joined.set(gidStr, new Set([upd.join.who]));
+      this.setState({joined: joined})
+    } else if ("quit" in upd) {
+      const gidStr = this.gidToStr(upd.quit.gid);
+      if ("~" + window.ship === upd.quit.who) {
+        (huts.has(gidStr)) &&
+          huts.get(gidStr).forEach(name =>
+            msgJar.delete(gidStr + "/" + name)
+          );
+        huts.delete(gidStr);
+        joined.delete(gidStr);
+        this.setState({
+          msgJar: msgJar,
+          huts: huts,
+          joined: joined,
+          currentGid: (currentGid === gidStr)
+            ? null : currentGid,
+          currentHut: (currentHut === null) ? null :
+            (
+              currentHut.split("/")[0] + "/" + currentHut.split("/")[1]
+                === gidStr
+            )
+            ? null : currentHut,
+          make: (currentGid === gidStr) ? "" : this.state.make
+        })
+      } else {
+        (joined.has(gidStr)) &&
+          joined.get(gidStr).delete(upd.quit.who);
+        this.setState({joined: joined})
+      }
+    } else if ("del" in upd) {
+      const gidStr = this.gidToStr(upd.del.hut.gid);
+      const hutStr = this.hutToStr(upd.del.hut);
+      (huts.has(gidStr)) &&
+        huts.get(gidStr).delete(upd.del.hut.name);
+      msgJar.delete(hutStr);
+      this.setState({
+        huts: huts,
+        msgJar: msgJar,
+        currentHut: (currentHut === hutStr) ? null : currentHut
+      })
+    }
+  };
+
+  changeGid = str => {
+    if (str === "def") {
+      this.setState({
+        currentGid: null,
+        currentHut: null,
+        viewSelect: "def",
+        make: ""
+      })
+    } else {
+      this.setState({
+        currentGid: str,
+        viewSelect: str,
+        currentHut: null,
+        make: ""
+      })
+    };
+  };
+
+  changeHut = hut => {
+    this.setState({
+      currentHut: hut,
+      msg: ""
+    }, () => this.scrollToBottom())
+  };
+
+  doPoke = jon => {
     window.urbit.poke({
       app: "hut",
       mark: "hut-do",
       json: jon,
-      onSuccess: succ
     })
   };
 
-  openHut = async hut => {
-    await this.resetState();
-    const newID = await window.urbit.subscribe({
-      app: "hut",
-      path: "/" + hut.host + "/" + hut.name,
-      event: this.handleUpdate,
-      quit: () => (this.state.host === hut.host) &&
-        this.openHut(hut),
-      err: () => this.resetState()
-    });
-    this.setState({
-        id: newID,
-        host: hut.host,
-        name: hut.name,
-        select: hut.host + "/" + hut.name,
-    })
-  };
-
-  joinHut = async hut => {
-    if (hut.host === this.our) return;
+  joinGid = () => {
+    const joinSelect = this.state.joinSelect
+    if (joinSelect === "def") return;
+    const [host, name] = joinSelect.split("/");
     this.doPoke(
-      {"join": {"host": hut.host, "name": hut.name}},
-      () => this.openHut(hut)
-    )
-  };
-
-  leaveHut = async () => {
-    const { host, name } = this.state;
-    if (host === null) return;
-    this.doPoke(
-      {"quit": {"host": host, "name": name}},
-      this.resetState
+      {"join": {
+        "gid" : {"host": host, "name": name},
+        "who" : this.our
+      }}
     );
+    this.setState({joinSelect: "def"})
+  };
+
+  leaveGid = () => {
+    if (this.state.currentGid === null) return;
+    const [host, name] = this.state.currentGid.split("/");
+    this.doPoke({
+      "quit": {
+        "gid": {"host": host, "name": name},
+        "who": this.our
+      }});
+    this.setState({
+      currentGid: null,
+      viewSelect: "def"
+    });
   };
 
   postMsg = () => {
-    const { msg, host, name } = this.state;
+    const { msg, currentHut } = this.state;
     const trimmed = msg.trim();
-    (trimmed !== "") &&
+    if (trimmed !== "" && currentHut !== null) {
+      const [host, gidName, hutName] = currentHut.split("/");
       this.doPoke(
         {
           "post": {
-            "hut": {"host": host, "name": name},
-            "msg": {"who": this.our, "what": msg}
+            "hut": {
+              "gid": {"host": host, "name": gidName},
+              "name": hutName
+            },
+            "msg": {"who": this.our, "what": trimmed}
           }
-        },
-        () => this.setState({msg: ""})
-      )
+        }
+      );
+      this.setState({msg: ""})
+    }
   };
 
   makeHut = () => {
-    const { make } = this.state;
+    const { make, currentGid } = this.state;
+    const trimmed = make.trim();
+    if (trimmed === "" || currentGid === null) return;
+    const [host, gidName] = currentGid.split("/");
     this.doPoke(
-      {"make": {"host": this.our, "name": make}},
-      () => {
-        this.getHuts();
-        this.setState({
-          select: this.our + "/" + make,
-          make: ""
-        });
-        this.openHut({host: this.our, name: make})
-      }
-    )
+      {"new": {
+        "hut": {"gid": {"host": host, "name": gidName}, "name": make},
+        "msgs": []
+      }}
+    );
+    this.setState({make: ""})
   };
 
-  addShip = () => {
-    const { add, host, name } = this.state;
-    (host === this.our && patpValidate(add)) &&
-      this.doPoke(
-        {
-          "ship": {
-            "hut": {"host": host, "name": name},
-            "who": add
-          }
-        },
-        () => this.setState({add: ""})
-      )
-  };
-
-  kickShip = ship => {
-    const { host, name } = this.state;
-    (host === this.our && ship !== this.our) &&
-      this.doPoke(
-        {
-          "kick": {
-            "hut": {"host": host, "name": name},
-            "who": ship
-          }
-        }, () => null
-      )
-  };
-
-  handleUpdate = upd => {
-    const { ppl, msgs } = this.state;
-    if ("init" in upd)
-      this.setState({
-        msgs: upd.init.msgs,
-        ppl: new Map(upd.init.ppl)
-      }, () => {
-        this.scrollToBottom()
-      });
-    else if ("join" in upd)
-      this.setState({ppl: ppl.set(upd.join, true)});
-    else if ("quit" in upd)
-      this.setState({ppl: ppl.set(upd.quit, false)});
-    else if ("ship" in upd)
-      this.setState({ppl: ppl.set(upd.ship, false)});
-    else if ("post" in upd)
-      this.setState({
-        msgs: [...msgs.slice(-49), upd.post]
-      }, () => {
-        this.scrollToBottom()
-      });
-    else if ("kick" in upd)
-      if (this.our === upd.kick)
-        this.setState({select: "def"}, () => this.resetState());
-      else {
-        ppl.delete(upd.kick);
-        this.setState({ppl: ppl})
-      }
+  deleteHut = () => {
+    const { currentHut } = this.state;
+    if (currentHut === null) return;
+    const [host, gidName, hutName] = currentHut.split("/")
+    if (host !== this.our) return;
+    this.doPoke({
+      "del": {"hut": {"gid": {"host": host, "name": gidName}, "name": hutName}}
+    });
   };
 
   patpShorten = patp => {
@@ -215,69 +296,56 @@ class App extends Component {
     return (
       <React.Fragment>
         <ConnStatus conn={this.state.conn}/>
-        <header>
-          <SelectHut
+        <SelectGid
+          our={this.our}
+          huts={this.state.huts}
+          currentGid={this.state.currentGid}
+          squads={this.state.squads}
+          titles={this.state.squads}
+          changeGid={this.changeGid}
+          patpShorten={this.patpShorten}
+          viewSelect={this.state.viewSelect}
+          joinSelect={this.state.joinSelect}
+          setJoin={e => this.setState({joinSelect: e.target.value})}
+          joinGid={this.joinGid}
+        />
+        <main>
+          <Huts
+            currentHut={this.state.currentHut}
+            currentGid={this.state.currentGid}
             huts={this.state.huts}
-            select={this.state.select}
-            setSelect={e => this.setState({select: e})}
-            openHut={this.openHut}
-            patpShorten={this.patpShorten}
-          />
-          <CreateHut
+            our={this.our}
+            changeHut={this.changeHut}
             make={this.state.make}
             setMake={e => this.setState({make: e})}
             makeHut={this.makeHut}
           />
-          <JoinNew
-            join={this.state.join}
-            joinHut={this.joinHut}
-            setJoin={e => this.setState({join: e})}
-            patpValidate={patpValidate}
-          />
-          <Allow
-            host={this.state.host}
-            add={this.state.add}
-            our={this.our}
-            setAdd={e => this.setState({add: e})}
-            addShip={this.addShip}
-          />
-          <LeaveHut
-            host={this.state.host}
-            our={this.our}
-            areYouSure={this.state.areYouSure}
-            leaveHut={this.leaveHut}
-            setAreYouSure={() => this.setState({areYouSure: true})}
-          />
-        </header>
-          <div Class="hut">
-            {
-              (this.state.host !== null) &&
-                this.patpShorten(this.state.host) + '/' + this.state.name
-            }
+          <div Class="content">
+            <Messages
+              currentHut={this.state.currentHut}
+              msgJar={this.state.msgJar}
+              bottom={this.bottom}
+              patpShorten={this.patpShorten}
+            />
+            <ChatInput
+              our={this.our}
+              msg={this.state.msg}
+              setMsg={e => this.setState({msg: e})}
+              postMsg={this.postMsg}
+              patpShorten={this.patpShorten}
+              currentHut={this.state.currentHut}
+            />
           </div>
-        <main>
-          <Messages
-            msgs={this.state.msgs}
-            bottom={this.bottom}
-            patpShorten={this.patpShorten}
-          />
           <People
-            ppl={this.state.ppl}
-            hover={this.state.hover}
-            host={this.state.host}
             our={this.our}
-            setHover={e => this.setState({hover: e})}
-            kickShip={this.kickShip}
+            joined={this.state.joined}
+            currentGid={this.state.currentGid}
             patpShorten={this.patpShorten}
+            currentHut={this.state.currentHut}
+            deleteHut={this.deleteHut}
+            leaveGid={this.leaveGid}
           />
         </main>
-        <ChatInput
-          our={this.our}
-          msg={this.state.msg}
-          setMsg={e => this.setState({msg: e})}
-          postMsg={this.postMsg}
-          patpShorten={this.patpShorten}
-        />
       </React.Fragment>
     )
   }

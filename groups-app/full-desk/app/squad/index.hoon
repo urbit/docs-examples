@@ -1,0 +1,1 @@
+../../../bare-desk/app/squad/index.hoon

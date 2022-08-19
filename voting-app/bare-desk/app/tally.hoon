@@ -1,4 +1,4 @@
-/-  *tally, *ring, ms=metadata-store, g=group
+/-  *tally, *ring, *squad
 /+  *mip, ring, default-agent, dbug, agentio
 /=  index  /app/tally/index
 |%
@@ -22,7 +22,9 @@
 ++  on-init
   ^-  (quip card _this)
   :_  this
-  [%pass /bind %arvo %e %connect `/'tally' %tally]~
+  :~  (~(arvo pass:io /bind) %e %connect `/'tally' %tally)
+      (~(watch-our pass:io /squad) %squad /local/all)
+  ==
 ++  on-save  !>(state)
 ++  on-load
   |=  old-vase=vase
@@ -59,81 +61,80 @@
       [(make-index:hc rid) state]
     ::
         %'POST'
-      ?~  body.request.req  [(make-index:hc rid) state]
+      ?~  body.request.req  [(redirect:hc rid "/tally") state]
       =/  query=(unit (list [k=@t v=@t]))
         (rush q.u.body.request.req yquy:de-purl:html)
-      ?~  query
-        :_  state
-        (give-http:hc rid [302 ['Location' '/tally'] ~] ~)
+      ?~  query  [(redirect:hc rid "/tally") state]
       =/  kv-map  (~(gas by *(map @t @t)) u.query)
-      ?:  (~(has by kv-map) 's-gid')
+      ?.  (~(has by kv-map) 'gid')
+        [(redirect:hc rid "/tally") state]
+      =/  =path
+        %-  tail
+        %+  rash  url.request.req
+        ;~(sfix apat:de-purl:html yquy:de-purl:html)
+      ?+    path  [(redirect:hc rid "/tally") state]
+          [%tally %watch ~]
+        ?.  (~(has by kv-map) 'gid')
+          [(redirect:hc rid "/tally") state]
         =/  =gid
-          %+  rash  (~(got by kv-map) 's-gid')
+          %+  rash  (~(got by kv-map) 'gid')
           ;~(plug fed:ag ;~(pfix cab sym))
         =^  cards  state  (handle-action %watch gid)
-        :_  state
-        %+  weld  cards
-        (give-http:hc rid [302 ['Location' '/tally'] ~] ~)
-      ?:  (~(has by kv-map) 'u-gid')
+        [(weld cards (redirect:hc rid "/tally")) state]
+      ::
+          [%tally %leave ~]
         =/  =gid
-          %+  rash  (~(got by kv-map) 'u-gid')
+          %+  rash  (~(got by kv-map) 'gid')
           ;~(plug fed:ag ;~(pfix cab sym))
         =^  cards  state  (handle-action %leave gid)
-        :_  state
-        %+  weld  cards
-        (give-http:hc rid [302 ['Location' '/tally'] ~] ~)
-      ?:  (~(has by kv-map) 'n-gid')
+        [(weld cards (redirect:hc rid "/tally")) state]
+      ::
+          [%tally %new ~]
         =/  =gid
-          %+  rash  (~(got by kv-map) 'n-gid')
+          %+  rash  (~(got by kv-map) 'gid')
           ;~(plug fed:ag ;~(pfix cab sym))
-        =/  days=@ud  (rash (~(got by kv-map) 'n-days') dem)
-        =/  proposal=@t  (~(got by kv-map) 'n-proposal')
-        =/  location=@t
-          %-  crip
-          %+  weld  "/tally#"
-          "{=>(<p.gid> ?>(?=(^ .) t))}_{(trip q.gid)}"
+        =/  days=@ud  (rash (~(got by kv-map) 'days') dem)
+        =/  proposal=@t  (~(got by kv-map) 'proposal')
+        =/  location=tape
+          "/tally#{=>(<host.gid> ?>(?=(^ .) t))}_{(trip name.gid)}"
         =^  cards  state  (handle-action %new proposal days gid)
-        :_  state
-        %+  weld  cards
-        (give-http:hc rid [302 ['Location' location] ~] ~)
-      ?:  (~(has by kv-map) 'w-gid')
+        [(weld cards (redirect:hc rid location)) state]
+      ::
+          [%tally %withdraw ~]
         =/  =gid
-          %+  rash  (~(got by kv-map) 'w-gid')
+          %+  rash  (~(got by kv-map) 'gid')
           ;~(plug fed:ag ;~(pfix cab sym))
-        =/  =pid  (rash (~(got by kv-map) 'w-pid') dem)
+        =/  =pid  (rash (~(got by kv-map) 'pid') dem)
         =^  cards  state  (handle-action %withdraw gid pid)
-        =/  location=@t
-          %-  crip
-          %+  weld  "/tally#"
-          "{=>(<p.gid> ?>(?=(^ .) t))}_{(trip q.gid)}"
-        :_  state
-        %+  weld  cards
-        (give-http:hc rid [302 ['Location' location] ~] ~)
-      =/  =gid
-        %+  rash  (~(got by kv-map) 'v-gid')
-        ;~(plug fed:ag ;~(pfix cab sym))
-      =/  =pid  (rash (~(got by kv-map) 'v-pid') dem)
-      =/  choice=?
-        %+  rash  (~(got by kv-map) 'v-choice')
-        ;~  pose
-          (cold %.y (jest 'yea'))
-          (cold %.n (jest 'nay'))
-        ==
-      =/  [=poll =votes]  (~(got bi by-group) gid pid)
-      =/  raw=raw-ring-signature
-        =<  raw
-        %:  sign:ring
-          our.bol
-          now.bol
-          eny.bol
-          choice
-          `pid
-          participants.ring-group.poll
-        ==
-      =^  cards  state  (handle-action %vote gid pid choice raw)
-      :_  state
-      %+  weld  cards
-      (give-http:hc rid [302 ['Location' (crip "/tally#{(a-co:co pid)}")] ~] ~)
+        =/  location=tape
+          "/tally#{=>(<host.gid> ?>(?=(^ .) t))}_{(trip name.gid)}"
+        [(weld cards (redirect:hc rid location)) state]
+      ::
+          [%tally %vote ~]
+        =/  =gid
+          %+  rash  (~(got by kv-map) 'gid')
+          ;~(plug fed:ag ;~(pfix cab sym))
+        =/  =pid  (rash (~(got by kv-map) 'pid') dem)
+        =/  choice=?
+          %+  rash  (~(got by kv-map) 'choice')
+          ;~  pose
+            (cold %.y (jest 'yea'))
+            (cold %.n (jest 'nay'))
+          ==
+        =/  [=poll =votes]  (~(got bi by-group) gid pid)
+        =/  raw=raw-ring-signature
+          =<  raw
+          %:  sign:ring
+            our.bol
+            now.bol
+            eny.bol
+            choice
+            `pid
+            participants.ring-group.poll
+          ==
+        =^  cards  state  (handle-action %vote gid pid choice raw)
+        [(weld cards (redirect:hc rid "/tally#{(a-co:co pid)}")) state]
+      ==
     ==
   ::
   ++  handle-action
@@ -141,15 +142,15 @@
     ^-  (quip card _state)
     ?-    -.act
         %new
-      =/  =path  /(scot %p p.gid.act)/[q.gid.act]
-      ?.  =(our.bol p.gid.act)
+      =/  =path  /(scot %p host.gid.act)/[name.gid.act]
+      ?.  =(our.bol host.gid.act)
         ?>  =(our.bol src.bol)
         :_  state
         :~  %+  ~(poke pass:io path)
-              [p.gid.act %tally]
+              [host.gid.act %tally]
             tally-action+!>(`action`[%new proposal.act days.act gid.act])
         ==
-      ?>  (~(has in (get-members:hc gid.act)) src.bol)
+      ?>  (is-allowed:hc gid.act src.bol)
       =/  members=(set [=ship =life])  (make-ring-members:hc gid.act)
       ?>  ?=(^ members)
       =/  expiry=@da  (add now.bol (yule days.act 0 0 0 ~))
@@ -173,12 +174,12 @@
         %vote
       =/  [=poll =votes]  (~(got bi by-group) gid.act pid.act)
       ?>  (gte expiry.poll now.bol)
-      =/  =path  /(scot %p p.gid.act)/[q.gid.act]
-      ?.  =(our.bol p.gid.act)
+      =/  =path  /(scot %p host.gid.act)/[name.gid.act]
+      ?.  =(our.bol host.gid.act)
         ?>  =(our.bol src.bol)
         :_  state(voted (~(put in voted) pid.act))
         :~  %+  ~(poke pass:io path)
-              [p.gid.act %tally]
+              [host.gid.act %tally]
             tally-action+!>([%vote gid.act pid.act vote.act])
         ==
       ?>  %:  verify:ring
@@ -203,28 +204,28 @@
     ::
         %watch
       ?>  =(our.bol src.bol)
-      ?>  !=(our.bol p.gid.act)
-      =/  =path  /(scot %p p.gid.act)/[q.gid.act]
+      ?>  !=(our.bol host.gid.act)
+      =/  =path  /(scot %p host.gid.act)/[name.gid.act]
       :_  state
-      :~  (~(watch pass:io path) [p.gid.act %tally] path)
+      :~  (~(watch pass:io path) [host.gid.act %tally] path)
       ==
     ::
         %leave
       ?>  =(our.bol src.bol)
-      ?<  =(our.bol p.gid.act)
-      =/  =path  /(scot %p p.gid.act)/[q.gid.act]
+      ?<  =(our.bol host.gid.act)
+      =/  =path  /(scot %p host.gid.act)/[name.gid.act]
       :_  state(by-group (~(del by by-group) gid.act))
-      :~  (~(leave-path pass:io path) [p.gid.act %tally] path)
+      :~  (~(leave-path pass:io path) [host.gid.act %tally] path)
       ==
     ::
         %withdraw
       =/  [=poll =votes]  (~(got bi by-group) gid.act pid.act)
-      =/  =path  /(scot %p p.gid.act)/[q.gid.act]
-      ?.  =(our.bol p.gid.poll)
+      =/  =path  /(scot %p host.gid.act)/[name.gid.act]
+      ?.  =(our.bol host.gid.poll)
         ?>  =(our.bol src.bol)
         :_  state(withdrawn (~(put in withdrawn) pid.act))
         :~  %+  ~(poke pass:io path)
-              [p.gid.act %tally]
+              [host.gid.act %tally]
             tally-action+!>(`action`[%withdraw gid.act pid.act])
         ==
       ?>  ?|  =(our.bol src.bol)
@@ -247,8 +248,8 @@
     `this
   ?>  ?=([@ @ ~] path)
   =/  =gid  [(slav %p i.path) i.t.path]
-  ?>  =(our.bol p.gid)
-  ?>  (~(has in (get-members:hc gid)) src.bol)
+  ?>  =(our.bol host.gid)
+  ?>  (is-allowed:hc gid src.bol)
   :_  this
   :~  %+  fact-init:io  %tally-update
       !>  ^-  update
@@ -259,6 +260,86 @@
 ++  on-agent
   |=  [=wire =sign:agent:gall]
   ^-  (quip card _this)
+  ?:  ?=([%squad ~] wire)
+    ?+    -.sign  (on-agent:def wire sign)
+        %kick
+      :_  this
+      :~  (~(watch-our pass:io /squad) %squad /local/all)
+      ==
+    ::
+        %watch-ack
+      ?~  p.sign  `this
+      :_  this
+      :~  (~(wait pass:io /behn) (add now.bol ~m15))
+      ==
+    ::
+        %fact
+      ?>  ?=(%squad-did p.cage.sign)
+      =/  =upd  !<(upd q.cage.sign)
+      ?+    -.upd  `this
+          %init-all
+        =/  to-rm=(list gid)
+          ~(tap in (~(dif in ~(key by by-group)) ~(key by squads.upd)))
+        =.  by-group
+          |-
+          ?~  to-rm  by-group
+          $(to-rm t.to-rm, by-group (~(del by by-group) i.to-rm))
+        =/  watchers=(list [=gid =ship])
+          %+  turn  ~(val by sup.bol)
+          |=  [=ship =path]
+          ^-  [gid @p]
+          ?>  ?=([@ @ ~] path)
+          [[(slav %p i.path) i.t.path] ship]
+        =/  cards=(list card)
+          %+  roll  watchers
+          |=  [[=gid =ship] cards=(list card)]
+          ?.  (~(has by squads.upd) gid)
+            :_  cards
+            (kick-only:io ship /(scot %p host.gid)/[name.gid] ~)
+          =/  =squad  (~(got by squads.upd) gid)
+          ?.  ?|  &(pub.squad (~(has ju acls.upd) gid ship))
+                  &(!pub.squad !(~(has ju acls.upd) gid ship))
+              ==
+            cards
+          :_  cards
+          (kick-only:io ship /(scot %p host.gid)/[name.gid] ~)
+        =.  cards
+          %+  weld  cards
+          %+  turn  to-rm
+          |=  =gid
+          ^-  card
+          =/  =path  /(scot %p host.gid)/[name.gid]
+          (~(leave-path pass:io path) [host.gid %tally] path)
+        [cards this(by-group by-group)]
+      ::
+          %del
+        =/  =path  /(scot %p host.gid.upd)/[name.gid.upd]
+        :_  this(by-group (~(del by by-group) gid.upd))
+        :~  (kick:io path ~)
+            (~(leave-path pass:io path) [host.gid.upd %tally] path)
+        ==
+      ::
+          %kick
+        =/  =path  /(scot %p host.gid.upd)/[name.gid.upd]
+        ?.  =(our.bol ship.upd)
+          :_  this
+          :~  (kick-only:io ship.upd path ~)
+          ==
+        :_  this(by-group (~(del by by-group) gid.upd))
+        :~  (kick:io path ~)
+            (~(leave-path pass:io path) [host.gid.upd %tally] path)
+        ==
+      ::
+          %leave
+        ?.  =(our.bol ship.upd)
+          `this
+        =/  =path  /(scot %p host.gid.upd)/[name.gid.upd]
+        :_  this(by-group (~(del by by-group) gid.upd))
+        :~  (kick:io path ~)
+            (~(leave-path pass:io path) [host.gid.upd %tally] path)
+        ==
+      ==
+    ==
   ?>  ?=([@ @ ~] wire)
   =/  =gid  [(slav %p i.wire) i.t.wire]
   ?+    -.sign  (on-agent:def wire sign)
@@ -268,7 +349,7 @@
   ::
       %kick
     :_  this
-    :~  (~(watch pass:io wire) [p.gid %tally] wire)
+    :~  (~(watch pass:io wire) [host.gid %tally] wire)
     ==
   ::
       %fact
@@ -276,7 +357,7 @@
     =/  upd  !<(update q.cage.sign)
     ?-    -.upd
         %init
-      =;  by-group  `this
+      =;  by-group  `this(by-group by-group)
       %+  ~(put by by-group)  gid
       %-  ~(rep by polls.upd)
       |=  [[=pid =poll =votes] acc=(map pid [=poll =votes])]
@@ -335,19 +416,32 @@
 ++  on-arvo
   |=  [=wire =sign-arvo]
   ^-  (quip card _this)
-  ?.  ?=([%bind ~] wire)
+  ?:  ?=([%bind ~] wire)
+    ?.  ?=([%eyre %bound *] sign-arvo)
+      (on-arvo:def [wire sign-arvo])
+    ~?  !accepted.sign-arvo
+      %eyre-rejected-tally-binding
+    `this
+  ?.  ?=([%behn ~] wire)
     (on-arvo:def [wire sign-arvo])
-  ?.  ?=([%eyre %bound *] sign-arvo)
-    (on-arvo:def [wire sign-arvo])
-  ~?  !accepted.sign-arvo
-    %eyre-rejected-tally-binding
-  `this
+  ?>  ?=([%behn %wake *] sign-arvo)
+  ?~  error.sign-arvo
+    :_  this
+    :~  (~(watch-our pass:io /squad) %squad /local/all)
+    ==
+  :_  this
+  :~  (~(wait pass:io /behn) (add now.bol ~m15))
+  ==
 ::
 ++  on-leave  on-leave:def
 ++  on-peek   on-peek:def
 ++  on-fail   on-fail:def
 --
 |_  bol=bowl:gall
+++  redirect
+    |=  [rid=@ta path=tape]
+    (give-http rid [302 ['Location' (crip path)] ~] ~)
+::
 ++  make-index
   |=  rid=@ta
   ^-  (list card)
@@ -381,10 +475,10 @@
   |=  =gid
   ^-  (set [=ship =life])
   =/  invited=(list @p)  ~(tap in (get-members gid))
-  =|  members=(set [=ship =life])
+  =|  participants=(set [=ship =life])
   |-
   ?~  invited
-    members
+    participants
   =/  lyfe
     .^  (unit @ud)
       %j
@@ -396,25 +490,43 @@
   ?~  lyfe
     $(invited t.invited)
   %=  $
-    invited  t.invited
-    members  (~(put in members) [i.invited u.lyfe])
+    invited       t.invited
+    participants  (~(put in participants) [i.invited u.lyfe])
   ==
+::
+++  is-allowed
+  |=  [=gid =ship]
+  ^-  ?
+  =/  u-acl
+    .^  (unit [pub=? acl=ppl])
+      %gx
+      (scot %p our.bol)
+      %squad
+      (scot %da now.bol)
+      %acl
+      (scot %p host.gid)
+      /[name.gid]/noun
+    ==
+  ?~  u-acl  |
+  ?:  pub.u.u-acl
+    !(~(has in acl.u.u-acl) ship)
+  (~(has in acl.u.u-acl) ship)
 ::
 ++  get-members
   |=  =gid
-  ^-  (set ship)
-  %-  ~(gas in *(set ship))
+  ^-  ppl
+  %-  ~(gas in *ppl)
   %+  skim
     %~  tap  in
-    =<  members
-    %-  fall
-    :_  *group:g
-    .^  (unit group:g)
+    .^  ppl
       %gx
       (scot %p our.bol)
-      %group-store
+      %squad
       (scot %da now.bol)
-      /groups/ship/(scot %p p.gid)/[q.gid]/noun
+      %members
+      (scot %p host.gid)
+      name.gid
+      /noun
     ==
   |=  =ship
   ?|  =(our.bol ship)

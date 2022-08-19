@@ -1,0 +1,1 @@
+../../bare-desk/sur/squad.hoon
