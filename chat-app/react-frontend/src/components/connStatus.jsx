@@ -1,18 +1,18 @@
 import React, { Component } from 'react';
+import cn from 'classNames';
 
 class ConnStatus extends Component {
   render() {
     const conn = this.props.conn;
     return (
       <div
-        Class="conn"
-        style={{
-          display: (conn === null) ? "none" : "block",
-          color: (conn === "ok") ? "#a1b56c"
-            : (conn === "try") ? "#dc9656"
-            : (conn === "err") ? "#ab4642"
-            : null
-        }}
+        className={cn("conn", {
+          "block": (conn !== null),
+          "none": (conn === null),
+          "text-green-400": (conn === "ok"),
+          "text-red": (conn === "err"),
+          "text-yellow-400": (conn === "try")
+        })}
       >
         {
           (conn === "ok") ? "connected"

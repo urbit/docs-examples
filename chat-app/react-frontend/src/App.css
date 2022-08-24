@@ -1,16 +1,10 @@
-:root {
-  color-scheme: dark;
-}
 body {
-  background-color: #202020;
-  color: #d8d8d8;
+  @apply bg-white text-wall-600 h-screen w-screen;
   margin: 0;
-  height: 100vh;
-  width: 100vw;
 }
 * {
-  font-family: monospace;
-  font-size: 1.1rem;
+  @apply font-sans;
+  font-size: 1rem;
   box-sizing: border-box;
 }
 div#root {
@@ -30,10 +24,7 @@ div#root {
   margin: 1em 0;
 }
 .gid-title {
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  display: block;
-  overflow: hidden;
+  @apply text-ellipsis whitespace-nowrap block overflow-hidden font-semibold;
   margin: 0 1ch;
 }
 .join-span {
@@ -41,35 +32,22 @@ div#root {
   white-space: nowrap;
 }
 .join-select {
-  background-color: #787878;
-  color: black;
   width: 9ch;
   text-overflow: ellipsis;
 }
 .join-button {
-  background-color: #6b6b6b;
-  color: black;
+  @apply bg-wall-400 text-white rounded-md px-2 font-medium ml-2 inline-block text-center;
   border: none;
-  width: 5ch;
-  margin: 0;
-  padding: 1;
   cursor: pointer;
 }
 main {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: row;
+  @apply flex flex-1 w-full;
   justify-content: stretch;
   height: calc(100% - 16em);
-  width: 100%;
 }
 .left-menu {
-  width: 14ch;
-  overflow: hidden;
+  @apply overflow-hidden flex flex-col h-full border rounded-lg mr-4 p-2 border-wall-200;
   flex: 0 0 auto;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
   justify-content: stretch;
 }
 .hut-list {
@@ -82,19 +60,15 @@ main {
   flex: 1 1 auto;
 }
 .make-hut {
+  @apply mb-4 rounded-md p-1;
   width: 13ch;
   flex: 0 0 auto;
   display: block;
 }
 .content {
-  flex: 1 1 auto;
-  background-color: #181818;
-  display: flex;
-  flex-direction: column;
+  @apply border flex flex-col flex-1 border-wall-200 rounded-lg;
   justify-content: stretch;
-  border-radius: 10px;
   overflow: hidden;
-  border: 1px solid rgba(216, 216, 216, 0.3);
 }
 .msgs {
   height: 100%;
@@ -108,11 +82,11 @@ main {
   text-indent: -16ch;
 }
 .who {
+  @apply font-medium;
   width: 16ch;
   text-align: right;
   padding-right: 1ch;
   display: inline-block;
-  color: rgba(216, 216, 216, 0.5);
 }
 .what {
   overflow-wrap: break-word;
@@ -131,22 +105,15 @@ main {
   flex: 0 0 auto;
   width: 100%;
   margin-bottom: 1em;
-  background-color: #ab4642;
-  color: #d8d8d8;
-  border: none;
-  padding: none;
-  cursor: pointer;
+  @apply bg-red rounded-md text-white font-medium cursor-pointer border-0 p-0;
   width: 14ch;
 }
 .ppl {
-  flex: 1 1 auto;
-  margin-top: 5px;
+  @apply flex-1 border rounded-lg p-2 border-wall-200;
   overflow-y: auto;
 }
 input, textarea {
-  background-color: #383838;
-  border: none;
-  color: #d8d8d8;
+  @apply bg-white border border-wall-200;
 }
 .our {
   width: 14ch;
@@ -171,8 +138,7 @@ textarea {
   resize: none;
 }
 select {
-  background-color: #787878;
-  color: black;
+  @apply bg-white;
   border: 0;
   cursor: pointer;
 }
@@ -188,17 +154,14 @@ label {
 }
 .out {color: rgba(216, 216, 216, 0.5)}
 .current-hut {
-  color: rgb(161, 181, 108);
-  background-color: #181818;
+  @apply text-green-400 border-wall-400 border;
   border-radius: 6px;
-  border: 1px solid rgba(216, 216, 216, 0.3);
-}
+}  
 .other-hut {
-  color: rgba(216, 216, 216, 0.5);
-  border: 1px solid #202020;
+  @apply text-wall-500;
 }
 .other-hut:hover {
-  color: #d8d8d8;
+  opacity: 0.8;
 }
 .current-hut, .other-hut {
   overflow: hidden;

@@ -1,15 +1,14 @@
 import React, {Component} from "react";
 import Urbit from "@urbit/http-api";
-import "./App.css";
 import ConnStatus from "./components/connStatus"
 import SelectGid from "./components/selectGid"
 import Huts from "./components/huts"
+import "./App.css";
 import ChatInput from "./components/chatInput"
 import People from "./components/people"
 import Messages from "./components/messages"
 
 class App extends Component {
-
   constructor(props) {
     super(props);
     window.urbit = new Urbit("");
@@ -320,7 +319,7 @@ class App extends Component {
             setMake={e => this.setState({make: e})}
             makeHut={this.makeHut}
           />
-          <div Class="content">
+          <div className="content">
             <Messages
               currentHut={this.state.currentHut}
               msgJar={this.state.msgJar}

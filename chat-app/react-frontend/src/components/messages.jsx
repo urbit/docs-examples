@@ -6,15 +6,15 @@ class Messages extends Component {
     const { msgJar, bottom, patpShorten, currentHut } = this.props;
     const msgs = msgJar.has(currentHut) ? msgJar.get(currentHut) : [];
     return (
-      <div Class="msgs">
-        <div Class="fix"/>
+      <div className="msgs">
+        <div className="fix"/>
         {
           msgs.map((msg, ind) =>
-            <p Class="msg" key={ind}>
-              <span Class="who">
+            <p className="msg" key={ind}>
+              <span className="who">
                 {patpShorten(msg.who) + '>'}
               </span>
-              <span Class="what" lang="en">{msg.what}</span>
+              <span className="what" lang="en">{msg.what}</span>
             </p>
           )
         }

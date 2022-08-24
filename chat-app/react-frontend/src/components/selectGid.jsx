@@ -17,12 +17,11 @@ class SelectGid extends Component {
       joinGid
     } = this.props;
     return (
-      <div Class="top-bar">
+      <div className="top-bar">
         <select
-          Class="gid-select"
           onChange={e => changeGid(e.target.value)}
           value={viewSelect}>
-          <option value="def">---squad---</option>
+          <option value="def">Squads</option>
           {
             [...huts.keys()].map((gidStr) =>
               <option value={gidStr}>
@@ -38,14 +37,14 @@ class SelectGid extends Component {
         </select>
         {
           (currentGid !== null) &&
-            <span Class="gid-title">
+            <span className="gid-title">
               {
                 squads.has(currentGid) ? squads.get(currentGid) : currentGid
               }
             </span>
         }
-        <span Class="join-span">
-          <select Class="join-select" onChange={setJoin} value={joinSelect}>
+        <div>
+          <select className="join-select" onChange={setJoin} value={joinSelect}>
             <option value="def">select</option>
             {
               [...squads].filter(
@@ -56,10 +55,10 @@ class SelectGid extends Component {
               )
             }
           </select>
-          <button Class="join-button" onClick={() => joinGid()}>
-            join
-          </button>
-        </span>
+          <a className='join-button' onClick={() => joinGid()}>
+            Join
+          </a>
+        </div>
       </div>
     )
   }
