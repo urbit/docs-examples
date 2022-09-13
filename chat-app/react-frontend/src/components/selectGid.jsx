@@ -45,7 +45,7 @@ class SelectGid extends Component {
         }
         <div>
           <select className="join-select" onChange={setJoin} value={joinSelect}>
-            <option value="def">select</option>
+            <option value="def">Select</option>
             {
               [...squads].filter(
                 ([gidStr, title]) =>

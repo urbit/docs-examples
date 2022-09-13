@@ -21,13 +21,13 @@
           %+  success-component
             ?:(success.page "success" "failed")
           success.page
-      ;h2: join
+      ;h2: Join
       ;+  join-component
-      ;h2: create
+      ;h2: Create
       ;+  new-component
       ;+  ?~  squads
             ;/("")
-          ;h2: squads
+          ;h2: Squads
       ;*  %+  turn
             %+  sort  ~(tap by squads)
             |=  [a=[* =title *] b=[* =title *]]
@@ -55,7 +55,7 @@
       =placeholder  "~sampel-palnet/squad-name"
       ;+  ;/("")
     ==
-    ;button(type "submit"): Join
+    ;button(type "submit", class "bg-green-400 text-white"): Join
     ;+  ?.  =('join' sect.page)
           ;/("")
         %+  success-component
@@ -76,7 +76,7 @@
       ;+  ;/("")
     ==
     ;br;
-    ;div(style "border: 1px solid #ccc; border-radius: 5px; padding: 0.5rem;")
+    ;div
       ;input
         =type   "checkbox"
         =id     "new-pub-checkbox"
@@ -88,7 +88,7 @@
       ;label(for "new-pub-checkbox"): Public
     ==
     ;br;
-    ;button(type "submit"): Create
+    ;button(type "submit", class "bg-green-400 text-white"): Create
     ;+  ?.  =('new' sect.page)
           ;/("")
         %+  success-component
@@ -160,11 +160,11 @@
   =/  gid-str=tape  "{=>(<host.gid> ?>(?=(^ .) t))}_{(trip name.gid)}"
   ;form(method "post", action "/squad/{?:(pub.squad "private" "public")}")
     ;input(type "hidden", name "gid", value gid-str);
-    ;button(type "submit"): {?:(pub.squad "make private" "make public")}
+    ;button(type "submit"): {?:(pub.squad "Make Private" "Make Public")}
     ;+  ?.  &(=('public' sect.page) ?=(^ gid.page) =(gid u.gid.page))
           ;/("")
         %+  success-component
-          ?:(success.page "success" "failed")
+          ?:(success.page "Success!" "Failed!")
         success.page
   ==
 ::
@@ -178,7 +178,7 @@
     =action    ?:(=(our.bol host.gid) "/squad/delete" "/squad/leave")
     =onsubmit  ?.(=(our.bol host.gid) "" "return confirm('Are you sure?');")
     ;input(type "hidden", name "gid", value gid-str);
-    ;button(type "submit", class "bg-red text-white"): {?:(=(our.bol host.gid) "delete" "leave")}
+    ;button(type "submit", class "bg-red text-white"): {?:(=(our.bol host.gid) "Delete" "Leave")}
   ==
 ::
 ++  squad-acl-component
@@ -188,10 +188,10 @@
   =/  gid-str=tape  "{=>(<host.gid> ?>(?=(^ .) t))}_{(trip name.gid)}"
   =/  summary=manx
     ;summary
-      ;h4(class "inline"): {?:(pub.squad "blacklist" "whitelist")} ({(a-co:co (lent acl))})
+      ;h4(class "inline"): {?:(pub.squad "Blacklist" "Whitelist")} ({(a-co:co (lent acl))})
     ==
   =/  kick-allow-form=manx
-    ;form(method "post", action "/squad/{?:(pub.squad "kick" "allow")}")
+    ;form(method "post", action "/squad/{?:(pub.squad "Kick" "Allow")}")
       ;input(type "hidden", name "gid", value gid-str);
       ;input
         =type         "text"
@@ -202,7 +202,7 @@
         =placeholder  "~sampel-palnet"
         ;+  ;/("")
       ==
-      ;input(type "submit", value ?:(pub.squad "blacklist" "whitelist"));
+      ;input(type "submit", value ?:(pub.squad "Blacklist" "Whitelist"));
       ;+  ?.  &(=('kick' sect.page) ?=(^ gid.page) =(gid u.gid.page))
             ;/("")
           %+  success-component
@@ -257,7 +257,7 @@
   =/  members=(list @p)  ~(tap in (~(get ju members) gid))
   ;details
     ;summary
-      ;h4(class "inline"): members ({(a-co:co (lent members))})
+      ;h4(class "inline"): Members ({(a-co:co (lent members))})
     ==
     ;div
       ;*  %+  turn
@@ -329,6 +329,9 @@
     }
     .bg-green {
       background-color: #12AE22;
+    }
+    .bg-green-400 {
+      background-color: #4eae75;
     }
     .bg-red {
       background-color: #ff4136;

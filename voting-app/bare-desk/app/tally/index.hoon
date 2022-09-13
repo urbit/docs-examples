@@ -89,7 +89,7 @@
             =required  ""
             ;*  (group-options-component %.n %.n)
           ==
-          ;input(id "s", type "submit", value "watch");
+          ;input(id "s", type "submit", value "Watch");
         ==
         ;form(method "post", action "/tally/leave")
           ;select
@@ -97,7 +97,7 @@
             =required  ""
             ;*  (group-options-component %.n %.y)
           ==
-          ;input(id "u", type "submit", value "leave");
+          ;input(id "u", type "submit", value "Leave");
         ==
       ==
       ;div(id "new", class "none")
@@ -135,7 +135,7 @@
             ;+  ;/("")
           ==
           ;br;
-          ;input(id "submit", type "submit", value "submit");
+          ;input(id "submit", type "submit", class "bg-green-400 text-white", value "Submit");
         ==
       ==
       ;div(class "none", id "group")
@@ -431,6 +431,9 @@
     }
     .bg-green {
       background-color: #12AE22;
+    }
+    .bg-green-400 {
+      background-color: #4eae75;
     }
     .bg-red {
       background-color: #ff4136;

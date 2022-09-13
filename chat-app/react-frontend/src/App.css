@@ -36,7 +36,7 @@ div#root {
   text-overflow: ellipsis;
 }
 .join-button {
-  @apply bg-wall-400 text-white rounded-md px-2 font-medium ml-2 inline-block text-center;
+  @apply bg-green-400 text-white rounded-md px-2 font-medium ml-2 inline-block text-center;
   border: none;
   cursor: pointer;
 }
