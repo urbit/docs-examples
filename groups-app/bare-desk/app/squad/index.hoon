@@ -191,7 +191,7 @@
       ;h4(class "inline"): {?:(pub.squad "Blacklist" "Whitelist")} ({(a-co:co (lent acl))})
     ==
   =/  kick-allow-form=manx
-    ;form(method "post", action "/squad/{?:(pub.squad "Kick" "Allow")}")
+    ;form(method "post", action "/squad/{?:(pub.squad "kick" "allow")}")
       ;input(type "hidden", name "gid", value gid-str);
       ;input
         =type         "text"
