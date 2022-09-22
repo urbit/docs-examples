@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import cn from 'classNames';
+import cn from 'classnames';
 
 class ConnStatus extends Component {
   render() {
