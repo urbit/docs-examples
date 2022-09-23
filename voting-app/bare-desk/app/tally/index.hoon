@@ -185,36 +185,6 @@
   ==
 ==
 ::
-++  sub-button
-  """
-  document.getElementById('new').classList = 'none';
-  document.getElementById('group').classList = 'none';
-  document.getElementById('sub').classList = 'flex col';
-  document.getElementById('sub-button').classList = 'active';
-  document.getElementById('new-button').classList = 'inactive';
-  document.getElementById('group-button').classList = 'inactive';
-  """
-::
-++  new-button
-  """
-  document.getElementById('new').classList = 'flex col';
-  document.getElementById('group').classList = 'none';
-  document.getElementById('sub').classList = 'none';
-  document.getElementById('sub-button').classList = 'inactive';
-  document.getElementById('new-button').classList = 'active';
-  document.getElementById('group-button').classList = 'inactive';
-  """
-::
-++  group-button
-  """
-  document.getElementById('new').classList = 'none';
-  document.getElementById('group').classList = 'flex col';
-  document.getElementById('sub').classList = 'none';
-  document.getElementById('sub-button').classList = 'inactive';
-  document.getElementById('new-button').classList = 'inactive';
-  document.getElementById('group-button').classList = 'active';
-  """
-::
 ++  group-options-component
   |=  [our=? in-subs=?]
   ^-  marl
@@ -402,6 +372,36 @@
           ;/  "{(a-co:co h.tarp)} hours"
         ;/  "{(a-co:co m.tarp)} minutes"
   ==
+::
+++  sub-button
+  """
+  document.getElementById('new').classList = 'none';
+  document.getElementById('group').classList = 'none';
+  document.getElementById('sub').classList = 'flex col';
+  document.getElementById('sub-button').classList = 'active';
+  document.getElementById('new-button').classList = 'inactive';
+  document.getElementById('group-button').classList = 'inactive';
+  """
+::
+++  new-button
+  """
+  document.getElementById('new').classList = 'flex col';
+  document.getElementById('group').classList = 'none';
+  document.getElementById('sub').classList = 'none';
+  document.getElementById('sub-button').classList = 'inactive';
+  document.getElementById('new-button').classList = 'active';
+  document.getElementById('group-button').classList = 'inactive';
+  """
+::
+++  group-button
+  """
+  document.getElementById('new').classList = 'none';
+  document.getElementById('group').classList = 'flex col';
+  document.getElementById('sub').classList = 'none';
+  document.getElementById('sub-button').classList = 'inactive';
+  document.getElementById('new-button').classList = 'inactive';
+  document.getElementById('group-button').classList = 'active';
+  """
 ::
 ++  style
   ^~
