@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 
 class Huts extends Component {
-
   handleKey = (e) =>
     (e.key === "Enter") &&
       !e.shiftKey &&
@@ -16,17 +15,18 @@ class Huts extends Component {
 
   render() {
     const { currentHut, currentGid, huts, our, make, changeHut } = this.props;
-    if (currentGid === null) return;
+    if (currentGid === null) return null;
     const theseHuts = (huts.has(currentGid))
           ? [...huts.get(currentGid)].map(name => currentGid + "/" + name)
           : []
     return (
-      <div Class="left-menu">
+      <div className="left-menu">
+        <p className="font-semibold text-wall-400 mb-2">Chats</p>
         {
           (currentGid !== null) &&
             (currentGid.split("/")[0] === our) &&
             <input
-              Class="make-hut"
+              className="make-hut"
               placeholder="new-hut123"
               type="text"
               value={make}
@@ -34,11 +34,11 @@ class Huts extends Component {
               onKeyUp={this.handleKey}
             />
         }
-        <div Class="hut-list">
+        <div>
           {
             theseHuts.map(hut =>
               <div
-                Class={(hut === currentHut) ? "current-hut" : "other-hut"}
+                className={(hut === currentHut) ? "current-hut" : "other-hut"}
                 key={hut}
                 onClick={() => changeHut(hut)}
               >

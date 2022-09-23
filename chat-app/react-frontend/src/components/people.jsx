@@ -18,26 +18,26 @@ class People extends Component {
           : [];
     return (
       (currentGid !== null ) &&
-        <div Class="right-menu">
+        <div className="right-menu">
           {
             (currentGid !== null)
               && (currentGid.split("/")[0] === our)
               && (currentHut !== null)
               && <button
-                   Class="leave-button"
+                   className="leave-button"
                    onClick={
                      () => (window.confirm('Are you sure?'))
                        && this.handleClick()
                    }
                  >
-                   Delete Hut
+                   Delete
                  </button>
           }
           {
             (currentGid !== null)
               && (currentGid.split("/")[0] !== our)
               && <button
-                   Class="leave-button"
+                   className="leave-button"
                    onClick={
                      () => (window.confirm('Are you sure?'))
                        && this.handleClick()
@@ -49,9 +49,8 @@ class People extends Component {
           }
           {
             (currentGid !== null) &&
-              <div Class="ppl">
-                <div>people</div>
-                <div>--------------</div>
+              <div className="ppl">
+                <div className="font-semibold text-wall-400">People</div>
                 {
                   Array.from(ppl, ship =>
                     <div key={ship}>

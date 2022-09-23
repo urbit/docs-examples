@@ -4,13 +4,20 @@
 |%
 +$  versioned-state
   $%  state-0
+      state-1
   ==
 +$  state-0  [%0 =by-group voted=(set pid) withdrawn=(set pid)]
++$  state-1  $:  %1
+                 =by-group
+                 voted=(set pid)
+                 withdrawn=(set pid)
+                 section=?(%subs %new %groups)
+             ==
 +$  card  card:agent:gall
 --
 ::
 %-  agent:dbug
-=|  state-0
+=|  state-1
 =*  state  -
 ^-  agent:gall
 =<
@@ -29,7 +36,11 @@
 ++  on-load
   |=  old-vase=vase
   ^-  (quip card _this)
-  [~ this(state !<(state-0 old-vase))]
+  =/  old  !<(versioned-state old-vase)
+  ?-  -.old
+    %1  `this(state old)
+    %0  `this(state [%1 by-group.old voted.old withdrawn.old %subs])
+  ==
 ::
 ++  on-poke
   |=  [=mark =vase]
@@ -44,10 +55,10 @@
     |=  [rid=@ta req=inbound-request:eyre]
     ^-  (quip card _state)
     ?.  authenticated.req
-      :_  state
+      :_  state(section %subs)
       (give-http:hc rid [307 ['Location' '/~/login?redirect='] ~] ~)
     ?+  method.request.req
-      :_  state
+      :_  state(section %subs)
       %^    give-http:hc
           rid
         :-  405
@@ -58,36 +69,38 @@
       (some (as-octs:mimes:html '<h1>405 Method Not Allowed</h1>'))
     ::
         %'GET'
-      [(make-index:hc rid) state]
+      [(make-index:hc rid) state(section %subs)]
     ::
         %'POST'
-      ?~  body.request.req  [(redirect:hc rid "/tally") state]
+      ?~  body.request.req
+        [(redirect:hc rid "/tally") state(section %subs)]
       =/  query=(unit (list [k=@t v=@t]))
         (rush q.u.body.request.req yquy:de-purl:html)
-      ?~  query  [(redirect:hc rid "/tally") state]
+      ?~  query
+        [(redirect:hc rid "/tally") state(section %subs)]
       =/  kv-map  (~(gas by *(map @t @t)) u.query)
       ?.  (~(has by kv-map) 'gid')
-        [(redirect:hc rid "/tally") state]
+        [(redirect:hc rid "/tally") state(section %subs)]
       =/  =path
         %-  tail
         %+  rash  url.request.req
         ;~(sfix apat:de-purl:html yquy:de-purl:html)
-      ?+    path  [(redirect:hc rid "/tally") state]
+      ?+    path  [(redirect:hc rid "/tally") state(section %subs)]
           [%tally %watch ~]
         ?.  (~(has by kv-map) 'gid')
-          [(redirect:hc rid "/tally") state]
+          [(redirect:hc rid "/tally") state(section %subs)]
         =/  =gid
           %+  rash  (~(got by kv-map) 'gid')
           ;~(plug fed:ag ;~(pfix cab sym))
         =^  cards  state  (handle-action %watch gid)
-        [(weld cards (redirect:hc rid "/tally")) state]
+        [(weld cards (redirect:hc rid "/tally")) state(section %subs)]
       ::
           [%tally %leave ~]
         =/  =gid
           %+  rash  (~(got by kv-map) 'gid')
           ;~(plug fed:ag ;~(pfix cab sym))
         =^  cards  state  (handle-action %leave gid)
-        [(weld cards (redirect:hc rid "/tally")) state]
+        [(weld cards (redirect:hc rid "/tally")) state(section %subs)]
       ::
           [%tally %new ~]
         =/  =gid
@@ -98,7 +111,7 @@
         =/  location=tape
           "/tally#{=>(<host.gid> ?>(?=(^ .) t))}_{(trip name.gid)}"
         =^  cards  state  (handle-action %new proposal days gid)
-        [(weld cards (redirect:hc rid location)) state]
+        [(weld cards (redirect:hc rid location)) state(section %groups)]
       ::
           [%tally %withdraw ~]
         =/  =gid
@@ -108,7 +121,7 @@
         =^  cards  state  (handle-action %withdraw gid pid)
         =/  location=tape
           "/tally#{=>(<host.gid> ?>(?=(^ .) t))}_{(trip name.gid)}"
-        [(weld cards (redirect:hc rid location)) state]
+        [(weld cards (redirect:hc rid location)) state(section %groups)]
       ::
           [%tally %vote ~]
         =/  =gid
@@ -133,7 +146,8 @@
             participants.ring-group.poll
           ==
         =^  cards  state  (handle-action %vote gid pid choice raw)
-        [(weld cards (redirect:hc rid "/tally#{(a-co:co pid)}")) state]
+        :_  state(section %groups)
+        (weld cards (redirect:hc rid "/tally#{(a-co:co pid)}"))
       ==
     ==
   ::
@@ -450,7 +464,7 @@
   %-  as-octs:mimes:html
   %-  crip
   %-  en-xml:html
-  (index bol by-group voted withdrawn)
+  (index bol by-group voted withdrawn section)
 ::
 ++  make-200
   |=  [rid=@ta dat=octs]

@@ -1,11 +1,22 @@
 /-  *tally, *squad
-|=  [bol=bowl:gall =by-group voted=(set pid) withdrawn=(set pid)]
+|=  $:  bol=bowl:gall
+        =by-group
+        voted=(set pid)
+        withdrawn=(set pid)
+        section=?(%subs %new %groups)
+    ==
 ^-  manx
 ?.  .^(? %gu /(scot %p our.bol)/squad/(scot %da now.bol))
   ;html
     ;head
       ;title: Tally
       ;meta(charset "utf-8");
+      ;link
+        =href  "https://fonts.googleapis.com/css2?family=Inter:wght@400;".
+               "600&family=Source+Code+Pro:wght@400;600&display=swap"
+        =rel   "stylesheet"
+        ;+  ;/("")
+      ==
       ;style
         ;+  ;/
             ^~
@@ -13,8 +24,11 @@
             %-  trip
             '''
             body {width: 100%; height: 100%; margin: 0;}
-            * {font-family: monospace}
+            * {font-family: "Inter", sans-serif;}
             div {
+              border: 1px solid #ccc;
+              border-radius: 5px;
+              padding: 1rem;
               position: relative;
               top: 50%;
               left: 50%;
@@ -65,67 +79,109 @@
   ;head
     ;title: Tally
     ;meta(charset "utf-8");
+    ;link
+      =href  "https://fonts.googleapis.com/css2?family=Inter:wght@400;".
+             "600&family=Source+Code+Pro:wght@400;600&display=swap"
+      =rel   "stylesheet"
+      ;+  ;/("")
+    ==
     ;style
       ;+  ;/  style
     ==
   ==
   ;body
-    ;h1: tally
-    ;h2: subscriptions
-    ;form(method "post", action "/tally/watch")
-      ;select
-        =name      "gid"
-        =required  ""
-        ;*  (group-options-component %.n %.n)
+    ;main
+      ;header
+        ;h1: Tally
+        ;div
+          ;button
+            =id       "sub-button"
+            =class    ?:(?=(%subs section) "active" "inactive")
+            =onclick  sub-button
+            ;+  ;/    "Subscriptions"
+          ==
+          ;button
+            =id       "new-button"
+            =class    ?:(?=(%new section) "active" "inactive")
+            =onclick  new-button
+            ;+  ;/    "New"
+          ==
+          ;button
+            =id      "group-button"
+            =class    ?:(?=(%groups section) "active" "inactive")
+            =onclick  group-button
+            ;+  ;/  "Groups"
+          ==
+        ==
       ==
-      ;input(id "s", type "submit", value "watch");
+      ;div(id "sub", class ?:(?=(%subs section) "flex col" "none"))
+        ;form(method "post", action "/tally/watch")
+          ;select
+            =name      "gid"
+            =required  ""
+            ;*  (group-options-component %.n %.n)
+          ==
+          ;input(id "s", type "submit", value "Watch");
+        ==
+        ;form(method "post", action "/tally/leave")
+          ;select
+            =name      "gid"
+            =required  ""
+            ;*  (group-options-component %.n %.y)
+          ==
+          ;input(id "u", type "submit", value "Leave");
+        ==
+      ==
+      ;div(id "new", class ?:(?=(%new section) "flex col" "none"))
+        ;form(method "post", action "/tally/new", class "col align-start")
+          ;div
+            ;label(for "n-gid"): Group:
+            ;select
+              =id        "n-gid"
+              =name      "gid"
+              =style     "margin-left: 1rem"
+              =required  ""
+              ;*  (group-options-component %.y %.y)
+            ==
+          ==
+          ;br;
+          ;label(for "days"): Duration:
+          ;input
+            =type         "number"
+            =id           "days"
+            =name         "days"
+            =min          "1"
+            =step         "1"
+            =required     ""
+            =placeholder  "days"
+            ;+  ;/("")
+          ==
+          ;br;
+          ;label(for "proposal"): Proposal:
+          ;input
+            =type      "text"
+            =id        "proposal"
+            =name      "proposal"
+            =size      "50"
+            =required  ""
+            ;+  ;/("")
+          ==
+          ;br;
+          ;input
+            =id     "submit"
+            =type   "submit"
+            =class  "bg-green-400 text-white"
+            =value  "Submit"
+            ;+  ;/("")
+          ==
+        ==
+      ==
+      ;div(id "group", class ?:(?=(%groups section) "flex col scroll" "none"))
+        ;*  ?~  has-polls
+              ~[;/("")]
+            (turn has-polls group-component)
+      ==
     ==
-    ;form(method "post", action "/tally/leave")
-      ;select
-        =name      "gid"
-        =required  ""
-        ;*  (group-options-component %.n %.y)
-      ==
-      ;input(id "u", type "submit", value "leave");
-    ==
-    ;h2: new poll
-    ;form(method "post", action "/tally/new")
-      ;label(for "n-gid"): group:
-      ;select
-        =id        "n-gid"
-        =name      "gid"
-        =required  ""
-        ;*  (group-options-component %.y %.y)
-      ==
-      ;br;
-      ;label(for "days"): duration:
-      ;input
-        =type         "number"
-        =id           "days"
-        =name         "days"
-        =min          "1"
-        =step         "1"
-        =required     ""
-        =placeholder  "days"
-        ;+  ;/("")
-      ==
-      ;br;
-      ;label(for "proposal"): proposal:
-      ;input
-        =type      "text"
-        =id        "proposal"
-        =name      "proposal"
-        =size      "50"
-        =required  ""
-        ;+  ;/("")
-      ==
-      ;br;
-      ;input(id "submit", type "submit", value "submit");
-    ==
-    ;h2: groups
-    ;*  ?~  has-polls
-          ~[;/("")]
-        (turn has-polls group-component)
   ==
 ==
 ::
@@ -170,7 +226,7 @@
     " ({(a-co:co open)})"
   ;details(id "{=>(<host.p> ?>(?=(^ .) t))}_{(trip name.p)}", open "open")
     ;summary
-      ;h3: {title}
+      ;h3(class "inline"): {title}
     ==
     ;*  (group-polls-component p polls)
   ==
@@ -204,7 +260,7 @@
         ;tr
           ;th: withdraw:
           ;td
-            ;form(method "post", action "/tally/withdraw")
+            ;form(class "inline-form", method "post", action "/tally/withdraw")
               ;input
                 =type  "hidden"
                 =name  "gid"
@@ -212,7 +268,7 @@
                 ;+  ;/("")
               ==
               ;input(type "hidden", name "pid", value (a-co:co pid));
-              ;input(type "submit", value "withdraw?");
+              ;input(type "submit", value "withdraw", class "bg-red text-white");
             ==
           ==
         ==
@@ -237,7 +293,7 @@
         ;tr
           ;th: vote:
           ;td
-            ;form(method "post", action "/tally/vote")
+            ;form(class "inline-form", method "post", action "/tally/vote")
               ;input
                 =type   "hidden"
                 =name   "gid"
@@ -317,26 +373,188 @@
         ;/  "{(a-co:co m.tarp)} minutes"
   ==
 ::
+++  sub-button
+  """
+  document.getElementById('new').classList = 'none';
+  document.getElementById('group').classList = 'none';
+  document.getElementById('sub').classList = 'flex col';
+  document.getElementById('sub-button').classList = 'active';
+  document.getElementById('new-button').classList = 'inactive';
+  document.getElementById('group-button').classList = 'inactive';
+  """
+::
+++  new-button
+  """
+  document.getElementById('new').classList = 'flex col';
+  document.getElementById('group').classList = 'none';
+  document.getElementById('sub').classList = 'none';
+  document.getElementById('sub-button').classList = 'inactive';
+  document.getElementById('new-button').classList = 'active';
+  document.getElementById('group-button').classList = 'inactive';
+  """
+::
+++  group-button
+  """
+  document.getElementById('new').classList = 'none';
+  document.getElementById('group').classList = 'flex col';
+  document.getElementById('sub').classList = 'none';
+  document.getElementById('sub-button').classList = 'inactive';
+  document.getElementById('new-button').classList = 'inactive';
+  document.getElementById('group-button').classList = 'active';
+  """
+::
 ++  style
   ^~
   ^-  tape
   %-  trip
   '''
-  * {font-family: monospace}
-  h3 {display: inline}
-  table {margin: 1em}
-  th {text-align: right; vertical-align: middle;}
-  td {padding-left: 1em; vertical-align: middle;}
-  td form {margin: 0}
-  label {
-    display: inline-block;
-    margin-right: 1em;
-    min-width: 9ch;
-    vertical-align: middle;
-  }
-  select {min-width: 8ch}
-  #s, #u {margin-left: 1ch}
-  #submit {margin-top: 1em}
-  #yea {margin-right: 1ch}
+    body { 
+      display: flex; 
+      width: 100%; 
+      height: 100%; 
+      justify-content: center; 
+      align-items: flex-start;
+      font-family: "Inter", sans-serif;
+      margin: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+    main {
+      width: 100%;
+      max-width: 500px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 0 1rem 1rem 1rem;
+      margin-top: 15vh;
+      min-height: 0;
+      max-height: min(80vh, 800px);
+      overflow-y: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      flex: 0 0 auto;
+      padding-bottom: 2rem;
+    }
+    #group {
+      flex: 1 1 auto;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    button {
+      -webkit-appearance: none;
+      border: none;
+      outline: none;
+      border-radius: 100px; 
+      font-weight: 500;
+      font-size: 1rem;
+      padding: 12px 24px;
+      cursor: pointer;
+    }
+    button:hover {
+      opacity: 0.8;
+    }
+    button.inactive {
+      background-color: #F4F3F1;
+      color: #626160;
+    }
+    button.active {
+      background-color: #000000;
+      color: white;
+    }
+    a {
+      text-decoration: none;
+      font-weight: 600;
+      color: rgb(0,177,113);
+    }
+    a:hover, input[type="submit"]:hover {
+      opacity: 0.8;
+      cursor: pointer;
+    }
+    .none {
+      display: none;
+    }
+    .block {
+      display: block;
+    }
+    code, .code {
+      font-family: "Source Code Pro", monospace;
+    }
+    .bg-green {
+      background-color: #12AE22;
+    }
+    .bg-green-400 {
+      background-color: #4eae75;
+    }
+    .bg-red {
+      background-color: #ff4136;
+    }
+    .text-white {
+      color: #fff;
+    }
+    h3 {
+      font-weight: 600;
+      font-size: 1rem;
+      color: #626160;
+    }
+    form {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .inline-form {
+      display: flex;
+      align-items: center;
+      flex-direction: horizontal;
+      justify-content: start;
+      margin: 0;
+    }
+    form button, button[type="submit"] {
+      border-radius: 10px;
+    }
+    input {
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    table {
+      margin: 2rem 0;
+    }
+    th {
+       padding-right: 1ch;
+    }
+    select {
+      min-width: 10ch;
+    }
+    .flex {
+      display: flex;
+    }
+    .col {
+      flex-direction: column;
+    }
+    .align-center {
+      align-items: center;
+    }
+    .align-start {
+      align-items: flex-start;
+    }
+    .justify-between {
+      justify-content: space-between;
+    }
+    .grow {
+      flex-grow: 1;
+    }
+    .inline {
+      display: inline;
+    }
+    .scroll {
+      overflow-y: auto;
+    }
+    @media screen and (max-width: 480px) {
+      main {
+        padding: 1rem;
+      }
+    }
   '''
 --
