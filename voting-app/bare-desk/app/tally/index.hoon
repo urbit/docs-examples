@@ -1,12 +1,22 @@
 /-  *tally, *squad
-|=  [bol=bowl:gall =by-group voted=(set pid) withdrawn=(set pid)]
+|=  $:  bol=bowl:gall
+        =by-group
+        voted=(set pid)
+        withdrawn=(set pid)
+        section=?(%subs %new %groups)
+    ==
 ^-  manx
 ?.  .^(? %gu /(scot %p our.bol)/squad/(scot %da now.bol))
   ;html
     ;head
       ;title: Tally
       ;meta(charset "utf-8");
-      ;link(href "https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Source+Code+Pro:wght@400;600&display=swap", rel "stylesheet");
+      ;link
+        =href  "https://fonts.googleapis.com/css2?family=Inter:wght@400;".
+               "600&family=Source+Code+Pro:wght@400;600&display=swap"
+        =rel   "stylesheet"
+        ;+  ;/("")
+      ==
       ;style
         ;+  ;/
             ^~
@@ -69,20 +79,42 @@
   ;head
     ;title: Tally
     ;meta(charset "utf-8");
-    ;link(href "https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Source+Code+Pro:wght@400;600&display=swap", rel "stylesheet");
+    ;link
+      =href  "https://fonts.googleapis.com/css2?family=Inter:wght@400;".
+             "600&family=Source+Code+Pro:wght@400;600&display=swap"
+      =rel   "stylesheet"
+      ;+  ;/("")
+    ==
     ;style
       ;+  ;/  style
     ==
   ==
   ;body
     ;main
-      ;h1: Tally
-      ;div(style "margin-bottom: 1rem;")
-        ;button(id "sub-button", class "active", onclick "{(trip sub-button)}"): Subscriptions
-        ;button(id "new-button", class "inactive", onclick "{(trip new-button)}"): New
-        ;button(id "group-button", class "inactive", onclick "{(trip group-button)}"): Groups
+      ;header
+        ;h1: Tally
+        ;div
+          ;button
+            =id       "sub-button"
+            =class    ?:(?=(%subs section) "active" "inactive")
+            =onclick  sub-button
+            ;+  ;/    "Subscriptions"
+          ==
+          ;button
+            =id       "new-button"
+            =class    ?:(?=(%new section) "active" "inactive")
+            =onclick  new-button
+            ;+  ;/    "New"
+          ==
+          ;button
+            =id      "group-button"
+            =class    ?:(?=(%groups section) "active" "inactive")
+            =onclick  group-button
+            ;+  ;/  "Groups"
+          ==
+        ==
       ==
-      ;div(class "flex col", id "sub")
+      ;div(id "sub", class ?:(?=(%subs section) "flex col" "none"))
         ;form(method "post", action "/tally/watch")
           ;select
             =name      "gid"
@@ -100,7 +132,7 @@
           ;input(id "u", type "submit", value "Leave");
         ==
       ==
-      ;div(id "new", class "none")
+      ;div(id "new", class ?:(?=(%new section) "flex col" "none"))
         ;form(method "post", action "/tally/new", class "col align-start")
           ;div
             ;label(for "n-gid"): Group:
@@ -135,10 +167,16 @@
             ;+  ;/("")
           ==
           ;br;
-          ;input(id "submit", type "submit", class "bg-green-400 text-white", value "Submit");
+          ;input
+            =id     "submit"
+            =type   "submit"
+            =class  "bg-green-400 text-white"
+            =value  "Submit"
+            ;+  ;/("")
+          ==
         ==
       ==
-      ;div(class "none", id "group")
+      ;div(id "group", class ?:(?=(%groups section) "flex col scroll" "none"))
         ;*  ?~  has-polls
               ~[;/("")]
             (turn has-polls group-component)
@@ -148,34 +186,34 @@
 ==
 ::
 ++  sub-button
-  '''
-    document.getElementById('new').classList = 'none'; 
-    document.getElementById('group').classList = 'none'; 
-    document.getElementById('sub').classList = 'flex col';
-    document.getElementById('sub-button').classList = 'active';
-    document.getElementById('new-button').classList = 'inactive';
-    document.getElementById('group-button').classList = 'inactive';
-  '''
+  """
+  document.getElementById('new').classList = 'none';
+  document.getElementById('group').classList = 'none';
+  document.getElementById('sub').classList = 'flex col';
+  document.getElementById('sub-button').classList = 'active';
+  document.getElementById('new-button').classList = 'inactive';
+  document.getElementById('group-button').classList = 'inactive';
+  """
 ::
 ++  new-button
-  '''
-    document.getElementById('new').classList = 'flex col'; 
-    document.getElementById('group').classList = 'none'; 
-    document.getElementById('sub').classList = 'none';
-    document.getElementById('sub-button').classList = 'inactive';
-    document.getElementById('new-button').classList = 'active';
-    document.getElementById('group-button').classList = 'inactive';
-  '''
+  """
+  document.getElementById('new').classList = 'flex col';
+  document.getElementById('group').classList = 'none';
+  document.getElementById('sub').classList = 'none';
+  document.getElementById('sub-button').classList = 'inactive';
+  document.getElementById('new-button').classList = 'active';
+  document.getElementById('group-button').classList = 'inactive';
+  """
 ::
 ++  group-button
-  '''
-    document.getElementById('new').classList = 'none'; 
-    document.getElementById('group').classList = 'flex col'; 
-    document.getElementById('sub').classList = 'none';
-    document.getElementById('sub-button').classList = 'inactive';
-    document.getElementById('new-button').classList = 'inactive';
-    document.getElementById('group-button').classList = 'active';
-  '''
+  """
+  document.getElementById('new').classList = 'none';
+  document.getElementById('group').classList = 'flex col';
+  document.getElementById('sub').classList = 'none';
+  document.getElementById('sub-button').classList = 'inactive';
+  document.getElementById('new-button').classList = 'inactive';
+  document.getElementById('group-button').classList = 'active';
+  """
 ::
 ++  group-options-component
   |=  [our=? in-subs=?]
@@ -252,7 +290,7 @@
         ;tr
           ;th: withdraw:
           ;td
-            ;form(method "post", action "/tally/withdraw")
+            ;form(class "inline-form", method "post", action "/tally/withdraw")
               ;input
                 =type  "hidden"
                 =name  "gid"
@@ -285,7 +323,7 @@
         ;tr
           ;th: vote:
           ;td
-            ;form(method "post", action "/tally/vote")
+            ;form(class "inline-form", method "post", action "/tally/vote")
               ;input
                 =type   "hidden"
                 =name   "gid"
@@ -375,7 +413,7 @@
       width: 100%; 
       height: 100%; 
       justify-content: center; 
-      align-items: center; 
+      align-items: flex-start;
       font-family: "Inter", sans-serif;
       margin: 0;
       -webkit-font-smoothing: antialiased;
@@ -385,10 +423,22 @@
       max-width: 500px;
       border: 1px solid #ccc;
       border-radius: 5px;
-      padding: 1rem;
+      padding: 0 1rem 1rem 1rem;
+      margin-top: 15vh;
       min-height: 0;
-      max-height: 500px;
+      max-height: min(80vh, 800px);
+      overflow-y: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      flex: 0 0 auto;
+      padding-bottom: 2rem;
+    }
+    #group {
+      flex: 1 1 auto;
       overflow-y: auto;
+      overflow-x: hidden;
     }
     button {
       -webkit-appearance: none;
@@ -451,6 +501,13 @@
       align-items: center;
       justify-content: space-between;
     }
+    .inline-form {
+      display: flex;
+      align-items: center;
+      flex-direction: horizontal;
+      justify-content: start;
+      margin: 0;
+    }
     form button, button[type="submit"] {
       border-radius: 10px;
     }
@@ -460,6 +517,15 @@
       padding: 12px;
       font-size: 12px;
       font-weight: 600;
+    }
+    table {
+      margin: 2rem 0;
+    }
+    th {
+       padding-right: 1ch;
+    }
+    select {
+      min-width: 10ch;
     }
     .flex {
       display: flex;
@@ -481,6 +547,9 @@
     }
     .inline {
       display: inline;
+    }
+    .scroll {
+      overflow-y: auto;
     }
     @media screen and (max-width: 480px) {
       main {
