@@ -2,9 +2,9 @@
   title+'Journal'
   info+'Dear diary...'
   color+0xd9.b06d
-  version+[0 1 0]
+  version+[0 1 1]
   website+'https://urbit.org'
   license+'MIT'
   base+'journal'
-  glob-ames+[~zod 0v0]
+  glob-http+['https://m.tinnus-napbus.xyz/pub/journal/glob-0v4.21q5n.9cmko.obeu8.llm53.1st53.glob' 0v4.21q5n.9cmko.obeu8.llm53.1st53]
 ==
