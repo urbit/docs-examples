@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import Urbit from "@urbit/http-api";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "react-day-picker/dist/style.css";
+import "react-day-picker/lib/style.css";
 import TextareaAutosize from "react-textarea-autosize";
 import Button from "react-bootstrap/Button";
 import Card from "react-bootstrap/Card";
