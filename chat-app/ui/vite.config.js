@@ -1,35 +1,14 @@
-import { loadEnv, defineConfig } from "vite";
-import reactRefresh from "@vitejs/plugin-react-refresh";
-import svgrPlugin from "vite-plugin-svgr";
-import { urbitPlugin } from "@urbit/vite-plugin-urbit";
-import fs from "fs/promises";
+import { loadEnv, defineConfig } from 'vite';
+import reactRefresh from '@vitejs/plugin-react-refresh';
+import { urbitPlugin } from '@urbit/vite-plugin-urbit';
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
+export default ({ mode }) => {
   Object.assign(process.env, loadEnv(mode, process.cwd()));
-  const SHIP_URL =
-    process.env.SHIP_URL || process.env.VITE_SHIP_URL || "http://localhost:80";
+  const SHIP_URL = process.env.SHIP_URL || process.env.VITE_SHIP_URL || 'http://localhost:8080';
+  console.log(SHIP_URL);
 
-  return {
-    esbuild: {
-      loader: "jsx",
-    },
-    optimizeDeps: {
-      esbuildOptions: {
-        loader: {
-          ".js": "jsx",
-        },
-      },
-    },
-    plugins: [
-      svgrPlugin({
-        svgrOptions: {
-          icon: true,
-          // ...svgr options (https://react-svgr.com/docs/options/)
-        },
-      }),
-      urbitPlugin({ base: "hut", target: SHIP_URL, secure: false }),
-      reactRefresh(),
-    ],
-  };
-});
+  return defineConfig({
+    plugins: [urbitPlugin({ base: 'hut', target: SHIP_URL, secure: false }), reactRefresh()]
+  });
+};

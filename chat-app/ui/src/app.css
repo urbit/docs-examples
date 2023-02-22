@@ -7,7 +7,7 @@ body {
   font-size: 1rem;
   box-sizing: border-box;
 }
-div#root {
+div#app {
   height: 100%;
   width: 100%;
   max-width: 100%;
@@ -156,7 +156,7 @@ label {
 .current-hut {
   @apply text-green-400 border-wall-400 border;
   border-radius: 6px;
-}  
+}
 .other-hut {
   @apply text-wall-500;
 }

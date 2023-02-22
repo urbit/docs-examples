@@ -3,12 +3,12 @@ import Urbit from "@urbit/http-api";
 import ConnStatus from "./components/connStatus"
 import SelectGid from "./components/selectGid"
 import Huts from "./components/huts"
-import "./App.css";
 import ChatInput from "./components/chatInput"
 import People from "./components/people"
 import Messages from "./components/messages"
+import "./app.css";
 
-class App extends Component {
+export class App extends Component {
   constructor(props) {
     super(props);
     window.urbit = new Urbit("");
@@ -349,5 +349,3 @@ class App extends Component {
     )
   }
 };
-
-export default App;
