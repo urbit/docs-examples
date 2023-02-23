@@ -1,27 +1,25 @@
-import React, { Component } from 'react';
+import React from 'react';
 
-class ChatInput extends Component {
+export default function ChatInput({
+  our,
+  msg,
+  setMsg,
+  postMsg,
+  patpShorten,
+  currentHut,
+}) {
+  const handleKey = (e) => (
+    (e.key === "Enter") && !e.shiftKey && postMsg()
+  );
 
-  handleKey = (e) =>
-  (e.key === "Enter") &&
-    !e.shiftKey &&
-    this.props.postMsg();
-
-  render() {
-    const {our, msg, currentHut} = this.props;
-    return (
-      (currentHut !== null) &&
-        <div Class="input">
-          <strong Class="our">{this.props.patpShorten(our)}</strong>
-          <textarea
-            value={msg}
-            onChange={e => this.props.setMsg(e.target.value)}
-            onKeyUp={this.handleKey}
-          >
-          </textarea>
-        </div>
-    )
-  }
+  return (currentHut !== null) && (
+    <div className="input">
+      <strong className="our">{patpShorten(our)}</strong>
+      <textarea
+        value={msg}
+        onChange={e => setMsg(e.target.value)}
+        onKeyUp={handleKey}
+      />
+    </div>
+  );
 }
-
-export default ChatInput;

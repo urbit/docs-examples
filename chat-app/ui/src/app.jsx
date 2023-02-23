@@ -6,9 +6,9 @@ import Huts from "./components/huts"
 import ChatInput from "./components/chatInput"
 import People from "./components/people"
 import Messages from "./components/messages"
-import "./app.css";
+import "./app.css"; // FIXME: Not applying 'textarea' css properly
 
-export class App extends Component {
+export default class App extends Component {
   constructor(props) {
     super(props);
     window.urbit = new Urbit("");

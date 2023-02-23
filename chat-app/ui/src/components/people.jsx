@@ -1,68 +1,65 @@
-import React, { Component } from 'react';
+import React from 'react';
 
-class People extends Component {
+export default function People({
+  our,
+  joined,
+  currentGid,
+  patpShorten,
+  currentHut,
+  deleteHut,
+  leaveGid,
+}) {
+  const isOurGroup = () => (
+    (currentGid !== null) && (currentGid.split("/")[0] === our)
+  );
+  const isntOurGroup = () => (
+    (currentGid !== null) && (currentGid.split("/")[0] !== our)
+  );
 
-  handleClick = () => {
-    (this.props.currentGid !== null) &&
-      (this.props.currentGid.split("/")[0] === this.props.our)
-      ? (this.props.currentHut !== null) && this.props.deleteHut()
-      : this.props.leaveGid()
-  };
+  const handleClick = () => (
+    isOurGroup()
+      ? (currentHut !== null) && deleteHut()
+      : leaveGid()
+  );
 
-  render() {
-    const { joined, currentGid, currentHut, our, leaveGid} = this.props;
-    const ppl = (currentGid === null)
-          ? []
-          : (joined.has(currentGid))
-          ? [...joined.get(currentGid)]
-          : [];
-    return (
-      (currentGid !== null ) &&
-        <div className="right-menu">
-          {
-            (currentGid !== null)
-              && (currentGid.split("/")[0] === our)
-              && (currentHut !== null)
-              && <button
-                   className="leave-button"
-                   onClick={
-                     () => (window.confirm('Are you sure?'))
-                       && this.handleClick()
-                   }
-                 >
-                   Delete
-                 </button>
-          }
-          {
-            (currentGid !== null)
-              && (currentGid.split("/")[0] !== our)
-              && <button
-                   className="leave-button"
-                   onClick={
-                     () => (window.confirm('Are you sure?'))
-                       && this.handleClick()
-                   }
-                 >
-                   Leave
-                 </button>
+  const ppl = (currentGid === null)
+    ? []
+    : (joined.has(currentGid))
+      ? [...joined.get(currentGid)]
+      : [];
 
-          }
-          {
-            (currentGid !== null) &&
-              <div className="ppl">
-                <div className="font-semibold text-wall-400">People</div>
-                {
-                  Array.from(ppl, ship =>
-                    <div key={ship}>
-                      {this.props.patpShorten(ship)}
-                    </div>
-                  )
-                }
-              </div>
-          }
+  return (currentGid !== null) && (
+    <div className="right-menu">
+      {(isOurGroup() && (currentHut !== null)) &&
+        <button
+            className="leave-button"
+            onClick={() =>
+              (window.confirm('Are you sure?')) && handleClick()
+            }
+            >
+          Delete
+        </button>
+      }
+      {(isntOurGroup()) &&
+        <button
+            className="leave-button"
+            onClick={() =>
+              (window.confirm('Are you sure?')) && handleClick()
+            }
+            >
+          Leave
+        </button>
+      }
+      {(currentGid !== null) &&
+        <div className="ppl">
+          <div className="font-semibold text-wall-400">People</div>
+          {Array.from(ppl, (ship) =>
+            <div key={ship}>
+              {patpShorten(ship)}
+            </div>
+          )}
         </div>
-    )
-  }
-};
-
-export default People;
+      }
+    </div>
+  );
+}

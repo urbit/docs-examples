@@ -1,59 +1,56 @@
-import React, { Component } from 'react';
+import React from 'react';
 
-class Huts extends Component {
-  handleKey = (e) =>
-    (e.key === "Enter") &&
-      !e.shiftKey &&
-        this.handleMake();
+export default function Huts({
+  currentHut,
+  currentGid,
+  huts,
+  our,
+  make,
+  setMake,
+  makeHut,
+  changeHut,
+}) {
+  const handleMake = () => (
+    /^[a-z][-a-z0-9]*$/.test(make) && makeHut()
+  );
+  const handleKey = (e) => (
+    (e.key === "Enter") && !e.shiftKey && handleMake()
+  );
+  const handleChange = (e) => (
+    /(^$|^[a-z][-a-z0-9]*$)/.test(e.target.value) && setMake(e.target.value)
+  );
 
-  handleMake = () =>
-    /^[a-z][-a-z0-9]*$/.test(this.props.make) && this.props.makeHut();
+  const theseHuts = (!huts.has(currentGid))
+    ? []
+    : [...huts.get(currentGid)].map(name => currentGid + "/" + name);
 
-  handleChange = (e) =>
-    /(^$|^[a-z][-a-z0-9]*$)/.test(e.target.value) &&
-      this.props.setMake(e.target.value);
-
-  render() {
-    const { currentHut, currentGid, huts, our, make, changeHut } = this.props;
-    if (currentGid === null) return null;
-    const theseHuts = (huts.has(currentGid))
-          ? [...huts.get(currentGid)].map(name => currentGid + "/" + name)
-          : []
-    return (
-      <div className="left-menu">
-        <p className="font-semibold text-wall-400 mb-2">Chats</p>
-        {
-          (currentGid !== null) &&
-            (currentGid.split("/")[0] === our) &&
-            <input
-              className="make-hut"
-              placeholder="new-hut123"
-              type="text"
-              value={make}
-              onChange={this.handleChange}
-              onKeyUp={this.handleKey}
-            />
-        }
-        <div>
-          {
-            theseHuts.map(hut =>
-              <div
-                className={(hut === currentHut) ? "current-hut" : "other-hut"}
-                key={hut}
-                onClick={() => changeHut(hut)}
-              >
-                {
-                  (hut === currentHut)
-                    ? <strong>{hut.split("/")[2]}</strong>
-                  : hut.split("/")[2]
-                }
-              </div>
-            )
-          }
-        </div>
+  return (currentGid !== null) && (
+    <div className="left-menu">
+      <p className="font-semibold text-wall-400 mb-2">Chats</p>
+      {((currentGid !== null) && (currentGid.split("/")[0] === our)) &&
+        <input
+          className="make-hut"
+          placeholder="new-hut123"
+          type="text"
+          value={make}
+          onChange={handleChange}
+          onKeyUp={handleKey}
+        />
+      }
+      <div>
+        {theseHuts.map(hut =>
+          <div
+            className={(hut === currentHut) ? "current-hut" : "other-hut"}
+            key={hut}
+            onClick={() => changeHut(hut)}
+          >
+            {(hut === currentHut)
+              ? <strong>{hut.split("/")[2]}</strong>
+              : hut.split("/")[2]
+            }
+          </div>
+        )}
       </div>
-    )
-  }
-};
-
-export default Huts;
+    </div>
+  );
+}
