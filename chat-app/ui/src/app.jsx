@@ -1,11 +1,11 @@
 import React, {Component} from "react";
 import Urbit from "@urbit/http-api";
-import ConnStatus from "./components/connStatus"
-import SelectGid from "./components/selectGid"
-import Huts from "./components/huts"
-import ChatInput from "./components/chatInput"
-import People from "./components/people"
-import Messages from "./components/messages"
+import ConnStatus from "./components/ConnStatus"
+import SelectGid from "./components/SelectGid"
+import Huts from "./components/Huts"
+import ChatInput from "./components/ChatInput"
+import People from "./components/People"
+import Messages from "./components/Messages"
 import "./app.css"; // FIXME: Not applying 'textarea' css properly
 
 export default class App extends Component {
