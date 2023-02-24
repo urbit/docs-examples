@@ -1,24 +1,42 @@
 import React from 'react';
-import { patpShorten, isLocalGroup, isRemoteGroup } from "./../lib";
+import { appPoke, patpShorten, isLocalGroup, isRemoteGroup } from "./../lib";
+import { OUR } from "./../const";
 
 export default function People({
-  joined,
+  ships,
   currentGid,
   currentHut,
-  deleteHut,
-  leaveGid,
 }) {
+  const deleteHut = () => {
+    if (currentHut !== null) {
+      const [host, gidName, hutName] = currentHut.split("/")
+      if (host === OUR) {
+        appPoke({
+          "del": {
+            "hut": {"gid": {"host": host, "name": gidName}, "name": hutName}
+          }
+        });
+      }
+    }
+  };
+
+  const leaveGid = () => {
+    if (currentGid !== null) {
+      const [host, name] = currentGid.split("/");
+      appPoke({
+        "quit": {
+          "gid": {"host": host, "name": name},
+          "who": OUR
+        }
+      });
+    }
+  };
+
   const handleClick = () => (
     isLocalGroup(currentGid)
       ? (currentHut !== null) && deleteHut()
       : leaveGid()
   );
-
-  const ppl = (currentGid === null)
-    ? []
-    : (joined.has(currentGid))
-      ? [...joined.get(currentGid)]
-      : [];
 
   return (currentGid !== null) && (
     <div className="right-menu">
@@ -45,7 +63,7 @@ export default function People({
       {(currentGid !== null) &&
         <div className="ppl">
           <div className="font-semibold text-wall-400">People</div>
-          {Array.from(ppl, (ship) =>
+          {Array.from(ships, (ship) =>
             <div key={ship}>
               {patpShorten(ship)}
             </div>

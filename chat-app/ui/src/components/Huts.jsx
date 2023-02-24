@@ -1,28 +1,30 @@
-import React from 'react';
-import { isLocalGroup } from "./../lib";
+import React, { useState } from "react";
+import { appPoke, isLocalGroup } from "./../lib";
 
 export default function Huts({
+  input,
+  setInput,
   currentHut,
   currentGid,
   huts,
-  make,
-  setMake,
-  makeHut,
   changeHut,
 }) {
-  const handleMake = () => (
-    /^[a-z][-a-z0-9]*$/.test(make) && makeHut()
-  );
-  const handleKey = (e) => (
-    (e.key === "Enter") && !e.shiftKey && handleMake()
-  );
-  const handleChange = (e) => (
-    /(^$|^[a-z][-a-z0-9]*$)/.test(e.target.value) && setMake(e.target.value)
-  );
-
-  const theseHuts = (!huts.has(currentGid))
-    ? []
-    : [...huts.get(currentGid)].map(name => currentGid + "/" + name);
+  const createHut = (e) => {
+    const trimmed = input.trim();
+    if ((e.key === "Enter") && !e.shiftKey
+        && /^[a-z][-a-z0-9]*$/.test(input)
+        && (trimmed !== "")
+        && (currentGid !== null)) {
+      const [host, gidName] = currentGid.split("/");
+      appPoke({
+        "new": {
+          "hut": {"gid": {"host": host, "name": gidName}, "name": input},
+          "msgs": []
+        }
+      });
+      setInput("");
+    }
+  };
 
   return (currentGid !== null) && (
     <div className="left-menu">
@@ -32,13 +34,17 @@ export default function Huts({
           className="make-hut"
           placeholder="new-hut123"
           type="text"
-          value={make}
-          onChange={handleChange}
-          onKeyUp={handleKey}
+          value={input}
+          onChange={e => {
+            if (/(^$|^[a-z][-a-z0-9]*$)/.test(e.target.value)) {
+              setInput(e.target.value)
+            }
+          }}
+          onKeyUp={createHut}
         />
       }
       <div>
-        {theseHuts.map(hut =>
+        {huts.map(hut =>
           <div
             className={(hut === currentHut) ? "current-hut" : "other-hut"}
             key={hut}

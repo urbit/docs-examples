@@ -2,15 +2,13 @@ import React from 'react';
 import { patpShorten } from "./../lib";
 
 export default function Messages({
-  currentHut,
-  msgJar,
+  content,
   bottom,
 }) {
-  const msgs = (!msgJar.has(currentHut)) ? [] : msgJar.get(currentHut);
   return (
     <div className="msgs">
       <div className="fix"/>
-        {msgs.map((msg, ind) =>
+        {content.map((msg, ind) =>
           <p className="msg" key={ind}>
             <span className="who">
               {patpShorten(msg.who) + '>'}

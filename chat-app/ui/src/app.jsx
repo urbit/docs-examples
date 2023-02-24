@@ -40,10 +40,8 @@ export default class App extends Component {
 
   scrollToBottom = () => this.bottom.current.scrollIntoView();
 
-  gidToStr = gid => gid.host + "/" + gid.name;
-  hutToStr = hut => {
-    return hut.gid.host + "/" + hut.gid.name + "/" + hut.name;
-  };
+  gidToStr = gid => `${gid.host}/${gid.name}`;
+  hutToStr = hut => `${hut.gid.host}/${hut.gid.name}/${hut.name}`;
 
   subscribe = () => {
     api.subscribe({
@@ -154,6 +152,7 @@ export default class App extends Component {
                 === gidStr
             )
             ? null : currentHut,
+          viewSelect: "def",
           make: (currentGid === gidStr) ? "" : this.state.make
         })
       } else {
@@ -213,47 +212,6 @@ export default class App extends Component {
     this.setState({joinSelect: "def"})
   };
 
-  leaveGid = () => {
-    if (this.state.currentGid === null) return;
-    const [host, name] = this.state.currentGid.split("/");
-    appPoke({
-      "quit": {
-        "gid": {"host": host, "name": name},
-        "who": OUR
-      }
-    });
-    this.setState({
-      currentGid: null,
-      viewSelect: "def"
-    });
-  };
-
-  makeHut = () => {
-    const { make, currentGid } = this.state;
-    const trimmed = make.trim();
-    if (trimmed === "" || currentGid === null) return;
-    const [host, gidName] = currentGid.split("/");
-    appPoke({
-      "new": {
-        "hut": {"gid": {"host": host, "name": gidName}, "name": make},
-        "msgs": []
-      }
-    });
-    this.setState({make: ""})
-  };
-
-  deleteHut = () => {
-    const { currentHut } = this.state;
-    if (currentHut === null) return;
-    const [host, gidName, hutName] = currentHut.split("/")
-    if (host !== OUR) return;
-    appPoke({
-      "del": {
-        "hut": {"gid": {"host": host, "name": gidName}, "name": hutName}
-      }
-    });
-  };
-
   render() {
     return (
       <React.Fragment>
@@ -271,28 +229,40 @@ export default class App extends Component {
         />
         <main>
           <Huts
+            huts={(!this.state.huts.has(this.state.currentGid))
+              ? []
+              : [...this.state.huts.get(this.state.currentGid)].map(name =>
+                this.state.currentGid + "/" + name
+              )
+            }
+            input={this.state.make}
+            setInput={e => this.setState({make: e})}
             currentHut={this.state.currentHut}
             currentGid={this.state.currentGid}
-            huts={this.state.huts}
             changeHut={this.changeHut}
-            make={this.state.make}
-            setMake={e => this.setState({make: e})}
-            makeHut={this.makeHut}
           />
           <div className="content">
             <Messages
-              currentHut={this.state.currentHut}
-              msgJar={this.state.msgJar}
+              content={this.state.msgJar.has(this.state.currentHut)
+                ? this.state.msgJar.get(this.state.currentHut)
+                : []
+              }
               bottom={this.bottom}
             />
-            <ChatInput currentHut={this.state.currentHut} />
+            <ChatInput
+              input={this.state.msg}
+              setInput={e => this.setState({msg: e})}
+              currentHut={this.state.currentHut} />
           </div>
           <People
-            joined={this.state.joined}
+            ships={(this.state.currentGid === null)
+              ? []
+              : (this.state.joined.has(this.state.currentGid))
+                ? [...this.state.joined.get(this.state.currentGid)]
+                : []
+            }
             currentGid={this.state.currentGid}
             currentHut={this.state.currentHut}
-            deleteHut={this.deleteHut}
-            leaveGid={this.leaveGid}
           />
         </main>
       </React.Fragment>

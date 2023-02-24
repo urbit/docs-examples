@@ -29,21 +29,20 @@ export default function SelectGid({
       </select>
       {(currentGid !== null) &&
         <span className="gid-title">
-          {
-            squads.has(currentGid) ? squads.get(currentGid) : currentGid
+          {squads.has(currentGid)
+            ? squads.get(currentGid)
+            : currentGid
           }
         </span>
       }
       <div>
         <select className="join-select" onChange={setJoin} value={joinSelect}>
           <option value="def">Select</option>
-          {
-            [...squads].filter(
+          {[...squads].filter(
               ([gidStr, title]) => (isRemoteGroup(gidStr) && !(huts.has(gidStr)))
             ).map(([gidStr, title]) =>
               <option key={gidStr} value={gidStr}>{title}</option>
-            )
-          }
+          )}
         </select>
         <a className='join-button' onClick={() => joinGid()}>
           Join

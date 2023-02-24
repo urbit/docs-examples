@@ -1,12 +1,14 @@
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { appPoke, patpShorten } from "./../lib";
 import { OUR } from "./../const";
 
-export default function ChatInput({currentHut}) {
-  const [content, setContent] = useState("");
-
+export default function ChatInput({
+  input,
+  setInput,
+  currentHut,
+}) {
   const handleKey = (e) => {
-    const trimmed = content.trim();
+    const trimmed = input.trim();
     if ((e.key === "Enter") && !e.shiftKey
         && (trimmed !== "")
         && (currentHut !== null)) {
@@ -17,7 +19,7 @@ export default function ChatInput({currentHut}) {
           "msg": {"who": OUR, "what": trimmed}
         }
       });
-      setContent("");
+      setInput("");
     }
   };
 
@@ -25,8 +27,8 @@ export default function ChatInput({currentHut}) {
     <div className="input">
       <strong className="our">{patpShorten(OUR)}</strong>
       <textarea
-        value={content}
-        onChange={e => setContent(e.target.value)}
+        value={input}
+        onChange={e => setInput(e.target.value)}
         onKeyUp={handleKey}
       />
     </div>
