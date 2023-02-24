@@ -1,23 +1,32 @@
-import React from 'react';
+import React, { useState, useCallback } from "react";
+import { appPoke, patpShorten } from "./../lib";
+import { OUR } from "./../const";
 
-export default function ChatInput({
-  our,
-  msg,
-  setMsg,
-  postMsg,
-  patpShorten,
-  currentHut,
-}) {
-  const handleKey = (e) => (
-    (e.key === "Enter") && !e.shiftKey && postMsg()
-  );
+export default function ChatInput({currentHut}) {
+  const [content, setContent] = useState("");
+
+  const handleKey = (e) => {
+    const trimmed = content.trim();
+    if ((e.key === "Enter") && !e.shiftKey
+        && (trimmed !== "")
+        && (currentHut !== null)) {
+      const [host, gidName, hutName] = currentHut.split("/");
+      appPoke({
+        "post": {
+          "hut": {"gid": {"host": host, "name": gidName}, "name": hutName},
+          "msg": {"who": OUR, "what": trimmed}
+        }
+      });
+      setContent("");
+    }
+  };
 
   return (currentHut !== null) && (
     <div className="input">
-      <strong className="our">{patpShorten(our)}</strong>
+      <strong className="our">{patpShorten(OUR)}</strong>
       <textarea
-        value={msg}
-        onChange={e => setMsg(e.target.value)}
+        value={content}
+        onChange={e => setContent(e.target.value)}
         onKeyUp={handleKey}
       />
     </div>

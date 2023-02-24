@@ -1,10 +1,10 @@
 import React from 'react';
+import { patpShorten } from "./../lib";
 
 export default function Messages({
   currentHut,
   msgJar,
   bottom,
-  patpShorten,
 }) {
   const msgs = (!msgJar.has(currentHut)) ? [] : msgJar.get(currentHut);
   return (

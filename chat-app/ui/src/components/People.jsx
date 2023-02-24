@@ -1,23 +1,15 @@
 import React from 'react';
+import { patpShorten, isLocalGroup, isRemoteGroup } from "./../lib";
 
 export default function People({
-  our,
   joined,
   currentGid,
-  patpShorten,
   currentHut,
   deleteHut,
   leaveGid,
 }) {
-  const isOurGroup = () => (
-    (currentGid !== null) && (currentGid.split("/")[0] === our)
-  );
-  const isntOurGroup = () => (
-    (currentGid !== null) && (currentGid.split("/")[0] !== our)
-  );
-
   const handleClick = () => (
-    isOurGroup()
+    isLocalGroup(currentGid)
       ? (currentHut !== null) && deleteHut()
       : leaveGid()
   );
@@ -30,7 +22,7 @@ export default function People({
 
   return (currentGid !== null) && (
     <div className="right-menu">
-      {(isOurGroup() && (currentHut !== null)) &&
+      {(isLocalGroup(currentGid) && (currentHut !== null)) &&
         <button
             className="leave-button"
             onClick={() =>
@@ -40,7 +32,7 @@ export default function People({
           Delete
         </button>
       }
-      {(isntOurGroup()) &&
+      {isRemoteGroup(currentGid) &&
         <button
             className="leave-button"
             onClick={() =>

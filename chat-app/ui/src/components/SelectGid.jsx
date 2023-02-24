@@ -1,13 +1,12 @@
 import React from 'react';
+import { patpShorten, isRemoteGroup } from "./../lib";
 
 export default function SelectGid({
-  our,
   huts,
   squads,
   titles,
   changeGid,
   currentGid,
-  patpShorten,
   viewSelect,
   joinSelect,
   setJoin,
@@ -40,8 +39,7 @@ export default function SelectGid({
           <option value="def">Select</option>
           {
             [...squads].filter(
-              ([gidStr, title]) =>
-              ((gidStr.split("/")[0] !== our) && !(huts.has(gidStr)))
+              ([gidStr, title]) => (isRemoteGroup(gidStr) && !(huts.has(gidStr)))
             ).map(([gidStr, title]) =>
               <option key={gidStr} value={gidStr}>{title}</option>
             )

@@ -1,10 +1,10 @@
 import React from 'react';
+import { isLocalGroup } from "./../lib";
 
 export default function Huts({
   currentHut,
   currentGid,
   huts,
-  our,
   make,
   setMake,
   makeHut,
@@ -27,7 +27,7 @@ export default function Huts({
   return (currentGid !== null) && (
     <div className="left-menu">
       <p className="font-semibold text-wall-400 mb-2">Chats</p>
-      {((currentGid !== null) && (currentGid.split("/")[0] === our)) &&
+      {isLocalGroup(currentGid) &&
         <input
           className="make-hut"
           placeholder="new-hut123"
