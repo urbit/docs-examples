@@ -1,15 +1,15 @@
 import React from 'react';
-import { appPoke, patpShorten, isLocalGroup, isRemoteGroup } from "./../lib";
-import { OUR } from "./../const";
+import { appPoke, patpShorten, isLocalGroup, isRemoteGroup } from "~/lib";
+import { OUR } from "~/const";
 
 export default function People({
   ships,
-  currentGid,
-  currentHut,
+  currGid,
+  currHut,
 }) {
   const deleteHut = () => {
-    if (currentHut !== null) {
-      const [host, gidName, hutName] = currentHut.split("/")
+    if (currHut !== null) {
+      const [host, gidName, hutName] = currHut.split("/")
       if (host === OUR) {
         appPoke({
           "del": {
@@ -21,8 +21,8 @@ export default function People({
   };
 
   const leaveGid = () => {
-    if (currentGid !== null) {
-      const [host, name] = currentGid.split("/");
+    if (currGid !== null) {
+      const [host, name] = currGid.split("/");
       appPoke({
         "quit": {
           "gid": {"host": host, "name": name},
@@ -33,14 +33,14 @@ export default function People({
   };
 
   const handleClick = () => (
-    isLocalGroup(currentGid)
-      ? (currentHut !== null) && deleteHut()
+    isLocalGroup(currGid)
+      ? (currHut !== null) && deleteHut()
       : leaveGid()
   );
 
-  return (currentGid !== null) && (
+  return (currGid !== null) && (
     <div className="right-menu">
-      {(isLocalGroup(currentGid) && (currentHut !== null)) &&
+      {(isLocalGroup(currGid) && (currHut !== null)) &&
         <button
             className="leave-button"
             onClick={() =>
@@ -50,7 +50,7 @@ export default function People({
           Delete
         </button>
       }
-      {isRemoteGroup(currentGid) &&
+      {isRemoteGroup(currGid) &&
         <button
             className="leave-button"
             onClick={() =>
@@ -60,7 +60,7 @@ export default function People({
           Leave
         </button>
       }
-      {(currentGid !== null) &&
+      {(currGid !== null) &&
         <div className="ppl">
           <div className="font-semibold text-wall-400">People</div>
           {Array.from(ships, (ship) =>

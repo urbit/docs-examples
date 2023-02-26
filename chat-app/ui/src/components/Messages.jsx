@@ -1,10 +1,13 @@
-import React from 'react';
-import { patpShorten } from "./../lib";
+import React, {useRef, useEffect} from 'react';
+import { patpShorten } from "~/lib";
 
-export default function Messages({
-  content,
-  bottom,
-}) {
+export default function Messages({content}) {
+  const bottom = useRef();
+
+  useEffect(() => {
+    bottom.current.scrollIntoView()
+  }, [content]);
+
   return (
     <div className="msgs">
       <div className="fix"/>

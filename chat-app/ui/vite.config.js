@@ -1,6 +1,7 @@
 import { loadEnv, defineConfig } from 'vite';
 import reactRefresh from '@vitejs/plugin-react-refresh';
 import { urbitPlugin } from '@urbit/vite-plugin-urbit';
+import { fileURLToPath } from 'url';
 
 // https://vitejs.dev/config/
 export default ({ mode }) => {
@@ -9,6 +10,7 @@ export default ({ mode }) => {
   console.log(SHIP_URL);
 
   return defineConfig({
-    plugins: [urbitPlugin({ base: 'hut', target: SHIP_URL, secure: false }), reactRefresh()]
+    plugins: [urbitPlugin({ base: 'hut', target: SHIP_URL, secure: false }), reactRefresh()],
+    resolve: { alias: { '~': fileURLToPath(new URL('./src', import.meta.url)) } },
   });
 };

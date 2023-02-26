@@ -1,42 +1,63 @@
 import React from 'react';
-import { patpShorten, isRemoteGroup } from "./../lib";
+import { appPoke, patpShorten, isRemoteGroup } from "~/lib";
+import { OUR } from "~/const";
 
 export default function SelectGid({
   huts,
   squads,
-  titles,
-  changeGid,
-  currentGid,
+  currGid,
+  setGid,
   viewSelect,
+  setView,
   joinSelect,
   setJoin,
-  joinGid,
 }) {
+  const handleJoin = () => {
+    if (joinSelect !== "def") {
+      const [host, name] = joinSelect.split("/");
+      appPoke({
+        "join": {
+          "gid" : {"host": host, "name": name},
+          "who" : OUR
+        }
+      });
+    }
+  };
+
+  const handleView = (newView) => {
+    setView(newView);
+    setGid((newView === "def") ? null : newView);
+  };
+
   return (
     <div className="top-bar">
       <select
-        onChange={e => changeGid(e.target.value)}
+        onChange={e => handleView(e.target.value)}
         value={viewSelect}>
         <option value="def">Squads</option>
         {[...huts.keys()].map((gidStr) =>
           <option key={gidStr} value={gidStr}>
-            {(titles.has(gidStr))
-              ? titles.get(gidStr)
+            {(squads.has(gidStr))
+              ? squads.get(gidStr)
               : patpShorten(gidStr.split("/")[0]) + "/" + gidStr.split("/")[1]
             }
           </option>
         )}
       </select>
-      {(currentGid !== null) &&
+      {(currGid !== null) &&
         <span className="gid-title">
-          {squads.has(currentGid)
-            ? squads.get(currentGid)
-            : currentGid
+          {squads.has(currGid)
+            ? squads.get(currGid)
+            : currGid
           }
         </span>
       }
       <div>
-        <select className="join-select" onChange={setJoin} value={joinSelect}>
+        <select
+            className="join-select"
+            value={joinSelect}
+            onChange={(e) => setJoin(e.target.value)}
+            >
           <option value="def">Select</option>
           {[...squads].filter(
               ([gidStr, title]) => (isRemoteGroup(gidStr) && !(huts.has(gidStr)))
@@ -44,7 +65,7 @@ export default function SelectGid({
               <option key={gidStr} value={gidStr}>{title}</option>
           )}
         </select>
-        <a className='join-button' onClick={() => joinGid()}>
+        <a className='join-button' onClick={handleJoin}>
           Join
         </a>
       </div>

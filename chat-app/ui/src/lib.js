@@ -1,5 +1,5 @@
-import { OUR } from "./const";
-import api from "./api";
+import { OUR } from "~/const";
+import api from "~/api";
 
 export function appPoke(jon) {
   return api.poke({
@@ -9,6 +9,7 @@ export function appPoke(jon) {
   });
 }
 
+
 export function isLocalGroup(gid) {
   return (gid !== null) && (gid.split("/")[0] === OUR);
 }
@@ -16,6 +17,16 @@ export function isLocalGroup(gid) {
 export function isRemoteGroup(gid) {
   return (gid !== null) && (gid.split("/")[0] !== OUR);
 }
+
+
+export function gidToStr(gid) {
+  return `${gid.host}/${gid.name}`;
+}
+
+export function hutToStr(hut) {
+  return `${hut.gid.host}/${hut.gid.name}/${hut.name}`;
+}
+
 
 export function patpShorten(patp) {
   let short = "";
