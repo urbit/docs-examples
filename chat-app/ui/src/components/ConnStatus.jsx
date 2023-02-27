@@ -6,8 +6,8 @@ export default function ConnStatus({conn}) {
       className={`conn
           ${(conn !== null) ? "block" : "none"}
           ${(conn === "ok") ? "text-green-400" : ""}
+          ${(conn === "try") ? "text-yellow-400" : ""}
           ${(conn === "err") ? "text-red" : ""}
-          ${(conn === "err") ? "text-yellow-400" : ""}
       `}
     >
       {(conn === "ok")

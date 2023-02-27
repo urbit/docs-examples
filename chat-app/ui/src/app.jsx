@@ -9,11 +9,11 @@ import Messages from "./components/Messages";
 import { appPoke, gidToStr, hutToStr } from "~/lib";
 import { OUR } from "~/const";
 import api from "~/api";
-import "~/app.css"; // FIXME: Not applying 'textarea' css properly
+import "~/app.css";
 
 export default function App() {
-  const [subEvent, setSubEvent] = useState({});
-  const [conn, setConn] = useState(null);
+  const [subEvent, setSubEvent] = useState({});   // object
+  const [conn, setConn] = useState(null);         // string?
 
   // gid: ~host/squad-name
   // hut: hut-name
@@ -68,20 +68,17 @@ export default function App() {
   useEffect(() => {
     const updateFuns = {
       "initAll": (update) => {
-        let newHuts = new Map();
         update.huts.forEach(obj =>
-          newHuts.set(gidToStr(obj.gid), new Set(obj.names))
-        );
-        const newContents = new Map(
-          update.msgJar.map(o => [hutToStr(o.hut), o.msgs])
-        );
-        const newMembers = new Map(
-          update.joined.map(o => [gidToStr(o.gid), new Set(o.ppl)])
+          huts.set(gidToStr(obj.gid), new Set(obj.names))
         );
 
-        setHuts(newHuts);
-        setChatContents(newContents);
-        setChatMembers(newMembers);
+        setHuts(new Map(huts));
+        setChatContents(new Map(
+          update.msgJar.map(o => [hutToStr(o.hut), o.msgs])
+        ));
+        setChatMembers(new Map(
+          update.joined.map(o => [gidToStr(o.gid), new Set(o.ppl)])
+        ));
       }, "init": (update) => {
         setChatContents(new Map(update.msgJar.reduce(
           (a, n) => a.set(hutToStr(n.hut), n.msgs)
@@ -171,10 +168,6 @@ export default function App() {
     const eventTypes = Object.keys(subEvent);
     if (eventTypes.length > 0) {
       const eventType = eventTypes[0];
-      // FIXME: Remove this code after debugging is over.
-      //
-      // console.log(eventType);
-      // console.log(subEvent[eventType]);
       updateFuns[eventType](subEvent[eventType]);
     }
   }, [subEvent]);
@@ -186,7 +179,7 @@ export default function App() {
         huts={huts}
         squads={squads}
         currGid={currGid}
-        setGid={e => {setCurrGid(e); setCurrHut(null);}}
+        setGid={e => {setCurrGid(e); setCurrHut(null); setHutInput("");}}
         viewSelect={viewSelect}
         setView={setViewSelect}
         joinSelect={joinSelect}
@@ -196,9 +189,7 @@ export default function App() {
         <Huts
           huts={(!huts.has(currGid))
             ? []
-            : [...huts.get(currGid)].map(name =>
-              currGid + "/" + name
-            )
+            : [...huts.get(currGid)].map(name => `${currGid}/${name}`)
           }
           input={hutInput}
           setInput={setHutInput}
@@ -208,9 +199,9 @@ export default function App() {
         />
         <div className="content">
           <Messages
-            content={chatContents.has(currHut)
-              ? chatContents.get(currHut)
-              : []
+            content={(!chatContents.has(currHut))
+              ? []
+              : chatContents.get(currHut)
             }
           />
           <ChatInput
@@ -221,9 +212,9 @@ export default function App() {
         <People
           ships={(currGid === null)
             ? []
-            : (chatMembers.has(currGid))
-              ? [...chatMembers.get(currGid)]
-              : []
+            : (!chatMembers.has(currGid))
+              ? []
+              : [...chatMembers.get(currGid)]
           }
           currGid={currGid}
           currHut={currHut}
