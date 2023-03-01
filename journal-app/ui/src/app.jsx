@@ -1,4 +1,5 @@
-import React, { Component } from "react";
+// import React, { Component } from "react";
+import React, {useState, useEffect} from "react";
 import Urbit from "@urbit/http-api";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "react-day-picker/lib/style.css";
@@ -18,68 +19,30 @@ import endOfDay from "date-fns/endOfDay";
 import startOfDay from "date-fns/startOfDay";
 import { BottomScrollListener } from "react-bottom-scroll-listener";
 
-class App extends Component {
-  state = {
-    entries: [],
-    drafts: {},
-    newDraft: {},
-    results: [],
-    searchTime: null,
-    searchStart: null,
-    searchEnd: null,
-    resultStart: null,
-    resultEnd: null,
-    latestUpdate: null,
-    entryToDelete: null,
-    status: null,
-    errorCount: 0,
-    errors: new Map(),
-  };
+export default function App() {
+  // Control/Meta State //
+  const [subEvent, setSubEvent] = useState({});
+  const [latestUpdate, setLatestUpdate] = useState(null);
+  const [status, setStatus] = useState(null);
+  const [errorCount, setErrorCount] = useState(0);
+  const [errors, setErrors] = useState(new Map());
 
-  componentDidMount() {
-    window.urbit = new Urbit("");
-    window.urbit.ship = window.ship;
-    window.urbit.onOpen = () => this.setState({ status: "con" });
-    window.urbit.onRetry = () => this.setState({ status: "try" });
-    window.urbit.onError = (err) => this.setState({ status: "err" });
-    this.init();
-  }
+  // Journal State //
+  const [entries, setEntries] = useState([]);
+  const [drafts, setDrafts] = useState({});
+  const [newDraft, setNewDraft] = useState({});
+  const [entryToDelete, setEntryToDelete] = useState(null);
 
-  init = () => {
-    this.getEntries().then(
-      (result) => {
-        this.handleUpdate(result);
-        this.setState({ latestUpdate: result.time });
-        this.subscribe();
-      },
-      (err) => {
-        this.setErrorMsg("Connection failed");
-        this.setState({ status: "err" });
-      }
-    );
-  };
+  // Search State //
+  const [results, setResults] = useState([]);
+  const [searchTime, setSearchTime] = useState(null);
+  const [searchStart, setSearchStart] = useState(null);
+  const [searchEnd, setSearchEnd] = useState(null);
+  const [resultStart, setResultStart] = useState(null);
+  const [resultEnd, setResultEnd] = useState(null);
 
-  reconnect = () => {
-    window.urbit.reset();
-    const latest = this.state.latestUpdate;
-    if (latest === null) {
-      this.init();
-    } else {
-      this.getUpdates().then(
-        (result) => {
-          result.logs.map((e) => this.handleUpdate(e));
-          this.subscribe();
-        },
-        (err) => {
-          this.setErrorMsg("Connection failed");
-          this.setState({ status: "err" });
-        }
-      );
-    }
-  };
-
-  getUpdates = async () => {
-    const { latestUpdate: latest } = this.state;
+  const getUpdates = async () => {
+    const latest = latestUpdate;
     const since = latest === null ? Date.now() : latest;
     const path = `/updates/since/${since}`;
     return window.urbit.scry({
@@ -88,8 +51,8 @@ class App extends Component {
     });
   };
 
-  getEntries = async () => {
-    const { entries: e } = this.state;
+  const getEntries = async () => {
+    const e = entries;
     const before = e.length === 0 ? Date.now() : e[e.length - 1].id;
     const max = 10;
     const path = `/entries/before/${before}/${max}`;
@@ -99,64 +62,99 @@ class App extends Component {
     });
   };
 
-  moreEntries = () => {
-    this.getEntries().then(
+  const init = () => {
+    getEntries().then(
       (result) => {
-        this.handleUpdate(result);
+        setSubEvent(result);
+        setLatestUpdate(result.time);
+        subscribe();
       },
       (err) => {
-        this.setErrorMsg("Fetching more entries failed");
+        setErrorMsg("Connection failed");
+        setStatus("err");
       }
     );
   };
 
-  subscribe = () => {
+  const reconnect = () => {
+    window.urbit.reset();
+    const latest = latestUpdate;
+    if (latest === null) {
+      init();
+    } else {
+      getUpdates().then(
+        (result) => {
+          result.logs.map(setSubEvent); // FIXME?
+          subscribe();
+        },
+        (err) => {
+          setErrorMsg("Connection failed");
+          setStatus("err");
+        }
+      );
+    }
+  };
+
+  const moreEntries = () => {
+    getEntries().then(
+      (result) => {
+        setSubEvent(result);
+      },
+      (err) => {
+        setErrorMsg("Fetching more entries failed");
+      }
+    );
+  };
+
+  const subscribe = () => {
     try {
       window.urbit.subscribe({
         app: "journal",
         path: "/updates",
-        event: this.handleUpdate,
-        err: () => this.setErrorMsg("Subscription rejected"),
-        quit: () => this.setErrorMsg("Kicked from subscription"),
+        event: setSubEvent,
+        err: () => setErrorMsg("Subscription rejected"),
+        quit: () => setErrorMsg("Kicked from subscription"),
       });
     } catch {
-      this.setErrorMsg("Subscription failed");
+      setErrorMsg("Subscription failed");
     }
   };
 
-  delete = (id) => {
+  const submitDelete = (id) => {
     window.urbit.poke({
       app: "journal",
       mark: "journal-action",
       json: { del: { id: id } },
-      onError: () => this.setErrorMsg("Deletion rejected"),
+      onError: () => setErrorMsg("Deletion rejected"),
     });
-    this.setState({ rmModalShow: false, entryToDelete: null });
+    setEntryToDelete(null);
   };
 
-  submitEdit = (id, txt) => {
+  const submitEdit = (id, txt) => {
     if (txt !== null) {
       window.urbit.poke({
         app: "journal",
         mark: "journal-action",
         json: { edit: { id: id, txt: txt } },
-        onError: () => this.setErrorMsg("Edit rejected"),
+        onError: () => setErrorMsg("Edit rejected"),
       });
-    } else this.cancelEdit(id);
+    } else cancelEdit(id);
   };
 
-  submitNew = (id, txt) => {
+  const submitNew = (id, txt) => {
     window.urbit.poke({
       app: "journal",
       mark: "journal-action",
       json: { add: { id: id, txt: txt } },
-      onSuccess: () => this.setState({ newDraft: {} }),
-      onError: () => this.setErrorMsg("New entry rejected"),
+      onSuccess: () => setNewDraft({}),
+      onError: () => setErrorMsg("New entry rejected"),
     });
   };
 
-  getSearch = async () => {
-    const { searchStart: ss, searchEnd: se, latestUpdate: lu } = this.state;
+  const getSearch = async () => {
+    const ss = searchStart;
+    const se = searchEnd;
+    const lu = latestUpdate;
     if (lu !== null && ss !== null && se !== null) {
       let start = ss.getTime();
       let end = se.getTime();
@@ -170,25 +168,23 @@ class App extends Component {
         })
         .then(
           (result) => {
-            this.setState({
-              searchTime: result.time,
-              searchStart: null,
-              searchEnd: null,
-              resultStart: ss,
-              resultEnd: se,
-              results: result.entries,
-            });
+            setSearchTime(result.time);
+            setSearchStart(null);
+            setSearchEnd(null);
+            setResultStart(ss);
+            setResultEnd(se);
+            setResults(result.entries);
           },
           (err) => {
-            this.setErrorMsg("Search failed");
+            setErrorMsg("Search failed");
           }
         );
     } else {
-      lu !== null && this.setErrorMsg("Searh failed");
+      lu !== null && setErrorMsg("Searh failed");
     }
   };
 
-  spot = (id, data) => {
+  const spot = (id, data) => {
     let low = 0;
     let high = data.length;
     while (low < high) {
@@ -199,8 +195,7 @@ class App extends Component {
     return low;
   };
 
-  inSearch = (id, time) => {
-    const { searchTime, resultStart, resultEnd } = this.state;
+  const inSearch = (id, time) => {
     return (
       searchTime !== null &&
       time >= searchTime &&
@@ -209,87 +204,31 @@ class App extends Component {
     );
   };
 
-  handleUpdate = (upd) => {
-    const { entries, drafts, results, latestUpdate } = this.state;
-    if (upd.time !== latestUpdate) {
-      if ("entries" in upd) {
-        this.setState({ entries: entries.concat(upd.entries) });
-      } else if ("add" in upd) {
-        const { time, add } = upd;
-        const eInd = this.spot(add.id, entries);
-        const rInd = this.spot(add.id, results);
-        const toE =
-          entries.length === 0 || add.id > entries[entries.length - 1].id;
-        const toR = this.inSearch(add.id, time);
-        toE && entries.splice(eInd, 0, add);
-        toR && results.splice(rInd, 0, add);
-        this.setState({
-          ...(toE && { entries: entries }),
-          ...(toR && { results: results }),
-          latestUpdate: time,
-        });
-      } else if ("edit" in upd) {
-        const { time, edit } = upd;
-        const eInd = entries.findIndex((e) => e.id === edit.id);
-        const rInd = results.findIndex((e) => e.id === edit.id);
-        const toE = eInd !== -1;
-        const toR = rInd !== -1 && this.inSearch(edit.id, time);
-        if (toE) entries[eInd] = edit;
-        if (toR) results[rInd] = edit;
-        (toE || toR) && delete drafts[edit.id];
-        this.setState({
-          ...(toE && { entries: entries }),
-          ...(toR && { results: results }),
-          ...((toE || toR) && { drafts: drafts }),
-          latestUpdate: time,
-        });
-      } else if ("del" in upd) {
-        const { time, del } = upd;
-        const eInd = entries.findIndex((e) => e.id === del.id);
-        const rInd = results.findIndex((e) => e.id === del.id);
-        const toE = eInd !== -1;
-        const toR = this.inSearch(del.id, time) && rInd !== -1;
-        toE && entries.splice(eInd, 1);
-        toR && results.splice(rInd, 1);
-        (toE || toR) && delete drafts[del.id];
-        this.setState({
-          ...(toE && { entries: entries }),
-          ...(toR && { results: results }),
-          ...((toE || toR) && { drafts: drafts }),
-          latestUpdate: time,
-        });
-      }
-    }
-  };
-
-  cancelEdit = (id) => {
-    const { drafts } = this.state;
+  const cancelEdit = (id) => {
     delete drafts[id];
-    this.setState({ drafts: drafts });
+    setDrafts({...drafts});
   };
 
-  saveDraft = (id, text) => {
-    const { drafts } = this.state;
+  const saveDraft = (id, text) => {
     drafts[id] = text;
-    this.setState({ drafts: drafts });
+    setDrafts({...drafts});
   };
 
-  setEdit = (id) => {
-    const { drafts } = this.state;
+  const setEdit = (id) => {
     if (!(id in drafts)) {
       drafts[id] = null;
-      this.setState({ drafts: drafts });
+      setDrafts({...drafts});
     }
   };
 
-  saveNew = (id, txt) => {
+  const saveNew = (id, txt) => {
     txt !== ""
-      ? this.setState({ newDraft: { id: id, txt: txt } })
-      : this.setState({ newDraft: {} });
+      ? setNewDraft({ id: id, txt: txt })
+      : setNewDraft({})
   };
 
-  newEntry = () => {
-    const { newDraft: n } = this.state;
+  const newEntry = () => {
+    const n = newDraft;
     const isNew = Object.keys(n).length === 0;
     const now = Date.now();
     return (
@@ -298,13 +237,13 @@ class App extends Component {
           className="w-100 form-control"
           placeholder="New journal entry"
           value={isNew ? "" : n.txt}
-          onChange={(e) => this.saveNew(isNew ? now : n.id, e.target.value)}
+          onChange={(e) => saveNew(isNew ? now : n.id, e.target.value)}
         />
         {!isNew && (
           <Button
             className="w-100 mt-3"
             variant="outline-primary"
-            onClick={() => this.submitNew(n.id, n.txt)}
+            onClick={() => submitNew(n.id, n.txt)}
           >
             Submit
           </Button>
@@ -313,23 +252,15 @@ class App extends Component {
     );
   };
 
-  closeRmModal = () => {
-    this.setState({ entryToDelete: null });
-  };
-
-  openRmModal = (id) => {
-    this.setState({ entryToDelete: id });
-  };
-
-  rmModal = () => {
-    const id = this.state.entryToDelete;
+  const rmModal = () => {
+    const id = entryToDelete;
     if (id !== null) {
       return (
         <Modal
           size="lg"
           centered
           show={id !== null}
-          onHide={() => this.closeRmModal()}
+          onHide={() => setEntryToDelete(null)}
         >
           <Modal.Header closeButton>
             <Modal.Title>Confirm Delete</Modal.Title>
@@ -338,7 +269,7 @@ class App extends Component {
             Are you sure you want to delete this journal entry?
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="outline-danger" onClick={() => this.delete(id)}>
+            <Button variant="outline-danger" onClick={() => submitDelete(id)}>
               Delete
             </Button>
           </Modal.Footer>
@@ -347,18 +278,17 @@ class App extends Component {
     }
   };
 
-  editBox = (id, txt, draft) => {
+  const editBox = (id, txt, draft) => {
     return (
       <TextareaAutosize
         className="w-100 form-control"
         value={draft === null ? txt : draft}
-        onChange={(e) => this.saveDraft(id, e.target.value)}
+        onChange={(e) => saveDraft(id, e.target.value)}
       />
     );
   };
 
-  printEntry = ({ id, txt }) => {
-    const { drafts } = this.state;
+  const printEntry = ({ id, txt }) => {
     const edit = id in drafts;
     const draft = id in drafts ? drafts[id] : null;
     const reg = /(?:\r?\n[ \t]*){2,}(?!\s*$)/;
@@ -369,19 +299,19 @@ class App extends Component {
           {d.toLocaleString()}
           <CloseButton
             className="fs-6"
-            onClick={() => (edit ? this.cancelEdit(id) : this.openRmModal(id))}
+            onClick={() => (edit ? cancelEdit(id) : setEntryToDelete(id))}
           />
         </Card.Header>
-        <Card.Body onClick={() => this.setEdit(id)}>
+        <Card.Body onClick={() => setEdit(id)}>
           {edit
-            ? this.editBox(id, txt, draft)
+            ? editBox(id, txt, draft)
             : txt.split(reg).map((e, ind) => <p key={ind}>{e}</p>)}
         </Card.Body>
         {edit && (
           <Button
             variant="outline-primary"
             className="mx-3 mb-3"
-            onClick={() => this.submitEdit(id, draft)}
+            onClick={() => submitEdit(id, draft)}
           >
             Submit
           </Button>
@@ -390,27 +320,25 @@ class App extends Component {
     );
   };
 
-  setSearchStart = (when) => {
+  const doSetSearchStart = (when) => {
     if (when instanceof Date && !isNaN(when)) {
       const date = startOfDay(when);
-      this.setState({ searchStart: date });
-    } else this.setState({ searchStart: null });
+      setSearchStart(date);
+    } else setSearchStart(null);
   };
 
-  setSearchEnd = (when) => {
+  const doSetSearchEnd = (when) => {
     if (when instanceof Date && !isNaN(when)) {
       const date = endOfDay(when);
-      this.setState({ searchEnd: date });
-    } else this.setState({ searchEnd: null });
+      setSearchEnd(date);
+    } else setSearchEnd(null);
   };
 
-  searcher = () => {
-    const {
-      searchStart: ss,
-      searchEnd: se,
-      resultStart: rs,
-      resultEnd: re,
-    } = this.state;
+  const searcher = () => {
+    const ss = searchStart;
+    const se = searchEnd;
+    const rs = resultStart;
+    const re = resultEnd;
     return (
       <Stack gap={5}>
         <div className="d-flex justify-content-between">
@@ -418,13 +346,13 @@ class App extends Component {
             <DayPickerInput
               value={ss}
               placeholder="FROM  YYYY-M-D"
-              onDayChange={(day) => this.setSearchStart(day)}
+              onDayChange={(day) => doSetSearchStart(day)}
               style={{ margin: "5px 5px 5px 0" }}
             />
             <DayPickerInput
               value={se}
               placeholder="TO  YYYY-M-D"
-              onDayChange={(day) => this.setSearchEnd(day)}
+              onDayChange={(day) => doSetSearchEnd(day)}
               style={{ margin: "5px 5px 5px 0" }}
             />
           </div>
@@ -436,7 +364,7 @@ class App extends Component {
                 : "outline-primary"
             }
             disabled={ss === null || se === null}
-            onClick={() => this.getSearch()}
+            onClick={() => getSearch()}
           >
             Search
           </Button>
@@ -450,29 +378,23 @@ class App extends Component {
     );
   };
 
-  setErrorMsg = (msg) => {
-    const { errors, errorCount } = this.state;
+  const setErrorMsg = (msg) => {
     const id = errorCount + 1;
-    this.setState({
-      errors: errors.set(id, msg),
-      errorCount: id,
-    });
+    setErrors(new Map(errors.set(id, msg)));
+    setErrorCount(id);
   };
 
-  rmErrorMsg = (id) => {
-    const { errors } = this.state;
+  const rmErrorMsg = (id) => {
     errors.delete(id);
-    this.setState({
-      errors: errors,
-    });
+    setErrors(new Map(errors));
   };
 
-  errorMsg = (id, msg) => {
+  const errorMsg = (id, msg) => {
     return (
       <Toast
         key={id}
         className="ms-auto"
-        onClose={() => this.rmErrorMsg(id)}
+        onClose={() => rmErrorMsg(id)}
         show={true}
         delay={3000}
         autohide
@@ -485,8 +407,7 @@ class App extends Component {
     );
   };
 
-  status = () => {
-    const { status, errors } = this.state;
+  const getStatus = () => {
     return (
       <ToastContainer
         style={{
@@ -496,7 +417,7 @@ class App extends Component {
           zIndex: 50,
         }}
       >
-        {[...errors].map((e) => this.errorMsg(e[0], e[1]))}
+        {[...errors].map((e) => errorMsg(e[0], e[1]))}
         <Toast
           bg={status === "try" ? "warning" : "danger"}
           className="w-100"
@@ -504,7 +425,7 @@ class App extends Component {
         >
           <Toast.Body
             className="d-flex justify-content-center align-items-center"
-            onClick={status === "err" ? () => this.reconnect() : null}
+            onClick={status === "err" ? () => reconnect() : null}
             role={status === "err" ? "button" : undefined}
           >
             <strong style={{ color: "white" }}>
@@ -520,36 +441,90 @@ class App extends Component {
     );
   };
 
-  render() {
-    return (
-      <React.Fragment>
-        {this.rmModal()}
-        <div className="m-3 d-flex justify-content-center">
-          <Card style={{ maxWidth: "50rem", width: "100%" }}>
-            <Tabs defaultActiveKey="journal" className="fs-2">
-              <Tab eventKey="journal" title="Journal">
-                <BottomScrollListener onBottom={() => this.moreEntries()}>
-                  {(scrollRef) => (
-                    <Stack gap={5} className="m-3 d-flex">
-                      {this.newEntry()}
-                      {this.state.entries.map((e) => this.printEntry(e))}
-                    </Stack>
-                  )}
-                </BottomScrollListener>
-              </Tab>
-              <Tab eventKey="search" title="Search">
-                <Stack gap={5} className="m-3 d-flex">
-                  {this.searcher()}
-                  {this.state.results.map((e) => this.printEntry(e))}
-                </Stack>
-              </Tab>
-            </Tabs>
-            {this.status()}
-          </Card>
-        </div>
-      </React.Fragment>
-    );
-  }
-}
+  useEffect(() => {
+    window.urbit = new Urbit("");
+    window.urbit.ship = window.ship;
 
-export default App;
+    window.urbit.onOpen = () => setStatus("con");
+    window.urbit.onRetry = () => setStatus("try");
+    window.urbit.onError = () => setStatus("err");
+
+    init();
+  }, []);
+
+  useEffect(() => {
+    const upd = subEvent;
+    if (upd.time !== latestUpdate) {
+      if ("entries" in upd) {
+        setEntries(entries.concat(upd.entries));
+      } else if ("add" in upd) {
+        const { time, add } = upd;
+        const eInd = spot(add.id, entries);
+        const rInd = spot(add.id, results);
+        const toE =
+          entries.length === 0 || add.id > entries[entries.length - 1].id;
+        const toR = inSearch(add.id, time);
+        toE && entries.splice(eInd, 0, add);
+        toR && results.splice(rInd, 0, add);
+        toE && setEntries([...entries]);
+        toR && setResults([...results]);
+        setLatestUpdate(time);
+      } else if ("edit" in upd) {
+        const { time, edit } = upd;
+        const eInd = entries.findIndex((e) => e.id === edit.id);
+        const rInd = results.findIndex((e) => e.id === edit.id);
+        const toE = eInd !== -1;
+        const toR = rInd !== -1 && inSearch(edit.id, time);
+        if (toE) entries[eInd] = edit;
+        if (toR) results[rInd] = edit;
+        (toE || toR) && delete drafts[edit.id];
+        toE && setEntries([...entries]);
+        toR && setResults([...results]);
+        (toE || toR) && setDrafts({...drafts});
+        setLatestUpdate(time);
+      } else if ("del" in upd) {
+        const { time, del } = upd;
+        const eInd = entries.findIndex((e) => e.id === del.id);
+        const rInd = results.findIndex((e) => e.id === del.id);
+        const toE = eInd !== -1;
+        const toR = inSearch(del.id, time) && rInd !== -1;
+        toE && entries.splice(eInd, 1);
+        toR && results.splice(rInd, 1);
+        (toE || toR) && delete drafts[del.id];
+        toE && setEntries([...entries]);
+        toR && setResults([...results]);
+        (toE || toR) && setDrafts({...drafts});
+        setLatestUpdate(time);
+      }
+    }
+  }, [subEvent]);
+
+  return (
+    <React.Fragment>
+      {rmModal()}
+      <div className="m-3 d-flex justify-content-center">
+        <Card style={{ maxWidth: "50rem", width: "100%" }}>
+          <Tabs defaultActiveKey="journal" className="fs-2">
+            <Tab eventKey="journal" title="Journal">
+              <BottomScrollListener onBottom={() => moreEntries()}>
+                {(scrollRef) => (
+                  <Stack gap={5} className="m-3 d-flex">
+                    {newEntry()}
+                    {entries.map((e) => printEntry(e))}
+                  </Stack>
+                )}
+              </BottomScrollListener>
+            </Tab>
+            <Tab eventKey="search" title="Search">
+              <Stack gap={5} className="m-3 d-flex">
+                {searcher()}
+                {results.map((e) => printEntry(e))}
+              </Stack>
+            </Tab>
+          </Tabs>
+          {getStatus()}
+        </Card>
+      </div>
+    </React.Fragment>
+  );
+}

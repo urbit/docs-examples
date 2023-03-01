@@ -1,5 +1,4 @@
 import React, {useState, useEffect} from "react";
-import Urbit from "@urbit/http-api";
 import ConnStatus from "./components/ConnStatus";
 import SelectGid from "./components/SelectGid";
 import Huts from "./components/Huts";
