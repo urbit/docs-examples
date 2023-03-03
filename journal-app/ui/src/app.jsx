@@ -19,7 +19,15 @@ import endOfDay from "date-fns/endOfDay";
 import startOfDay from "date-fns/startOfDay";
 import { BottomScrollListener } from "react-bottom-scroll-listener";
 
+////////////////////
+// Main Component //
+////////////////////
+
 export default function App() {
+  /////////////////////////
+  /// Application State ///
+  /////////////////////////
+
   // Control/Meta State //
   const [subEvent, setSubEvent] = useState({});
   const [latestUpdate, setLatestUpdate] = useState(null);
@@ -35,11 +43,62 @@ export default function App() {
 
   // Search State //
   const [results, setResults] = useState([]);
-  const [searchTime, setSearchTime] = useState(null);
-  const [searchStart, setSearchStart] = useState(null);
-  const [searchEnd, setSearchEnd] = useState(null);
-  const [resultStart, setResultStart] = useState(null);
-  const [resultEnd, setResultEnd] = useState(null);
+  const [searchMeta, setSearchMeta] = useState({
+    time: null,
+    start: null,
+    end: null
+  });
+
+  ///////////////////////
+  /// State Functions ///
+  ///////////////////////
+
+  const init = () => {
+    getEntries().then(
+      (result) => {
+        setSubEvent(result);
+        setLatestUpdate(result.time);
+        subscribe();
+      },
+      (err) => {
+        addError("Connection failed");
+        setStatus("err");
+      }
+    );
+  };
+
+  const reconnect = () => {
+    window.urbit.reset();
+    const latest = latestUpdate;
+    if (latest === null) {
+      init();
+    } else {
+      getUpdates().then(
+        (result) => {
+          result.logs.map(setSubEvent); // FIXME?
+          subscribe();
+        },
+        (err) => {
+          addError("Connection failed");
+          setStatus("err");
+        }
+      );
+    }
+  };
+
+  const subscribe = () => {
+    try {
+      window.urbit.subscribe({
+        app: "journal",
+        path: "/updates",
+        event: setSubEvent,
+        err: () => addError("Subscription rejected"),
+        quit: () => addError("Kicked from subscription"),
+      });
+    } catch {
+      addError("Subscription failed");
+    }
+  };
 
   const getUpdates = async () => {
     const latest = latestUpdate;
@@ -62,383 +121,15 @@ export default function App() {
     });
   };
 
-  const init = () => {
-    getEntries().then(
-      (result) => {
-        setSubEvent(result);
-        setLatestUpdate(result.time);
-        subscribe();
-      },
-      (err) => {
-        setErrorMsg("Connection failed");
-        setStatus("err");
-      }
-    );
-  };
-
-  const reconnect = () => {
-    window.urbit.reset();
-    const latest = latestUpdate;
-    if (latest === null) {
-      init();
-    } else {
-      getUpdates().then(
-        (result) => {
-          result.logs.map(setSubEvent); // FIXME?
-          subscribe();
-        },
-        (err) => {
-          setErrorMsg("Connection failed");
-          setStatus("err");
-        }
-      );
-    }
-  };
-
-  const moreEntries = () => {
-    getEntries().then(
-      (result) => {
-        setSubEvent(result);
-      },
-      (err) => {
-        setErrorMsg("Fetching more entries failed");
-      }
-    );
-  };
-
-  const subscribe = () => {
-    try {
-      window.urbit.subscribe({
-        app: "journal",
-        path: "/updates",
-        event: setSubEvent,
-        err: () => setErrorMsg("Subscription rejected"),
-        quit: () => setErrorMsg("Kicked from subscription"),
-      });
-    } catch {
-      setErrorMsg("Subscription failed");
-    }
-  };
-
-  const submitDelete = (id) => {
-    window.urbit.poke({
-      app: "journal",
-      mark: "journal-action",
-      json: { del: { id: id } },
-      onError: () => setErrorMsg("Deletion rejected"),
-    });
-    setEntryToDelete(null);
-  };
-
-  const submitEdit = (id, txt) => {
-    if (txt !== null) {
-      window.urbit.poke({
-        app: "journal",
-        mark: "journal-action",
-        json: { edit: { id: id, txt: txt } },
-        onError: () => setErrorMsg("Edit rejected"),
-      });
-    } else cancelEdit(id);
-  };
-
-  const submitNew = (id, txt) => {
-    window.urbit.poke({
-      app: "journal",
-      mark: "journal-action",
-      json: { add: { id: id, txt: txt } },
-      onSuccess: () => setNewDraft({}),
-      onError: () => setErrorMsg("New entry rejected"),
-    });
-  };
-
-  const getSearch = async () => {
-    const ss = searchStart;
-    const se = searchEnd;
-    const lu = latestUpdate;
-    if (lu !== null && ss !== null && se !== null) {
-      let start = ss.getTime();
-      let end = se.getTime();
-      if (start < 0) start = 0;
-      if (end < 0) end = 0;
-      const path = `/entries/between/${start}/${end}`;
-      window.urbit
-        .scry({
-          app: "journal",
-          path: path,
-        })
-        .then(
-          (result) => {
-            setSearchTime(result.time);
-            setSearchStart(null);
-            setSearchEnd(null);
-            setResultStart(ss);
-            setResultEnd(se);
-            setResults(result.entries);
-          },
-          (err) => {
-            setErrorMsg("Search failed");
-          }
-        );
-    } else {
-      lu !== null && setErrorMsg("Searh failed");
-    }
-  };
-
-  const spot = (id, data) => {
-    let low = 0;
-    let high = data.length;
-    while (low < high) {
-      let mid = (low + high) >>> 1;
-      if (data[mid].id > id) low = mid + 1;
-      else high = mid;
-    }
-    return low;
-  };
-
-  const inSearch = (id, time) => {
-    return (
-      searchTime !== null &&
-      time >= searchTime &&
-      resultStart.getTime() <= id &&
-      resultEnd.getTime() >= id
-    );
-  };
-
-  const cancelEdit = (id) => {
-    delete drafts[id];
-    setDrafts({...drafts});
-  };
-
-  const saveDraft = (id, text) => {
-    drafts[id] = text;
-    setDrafts({...drafts});
-  };
-
-  const setEdit = (id) => {
-    if (!(id in drafts)) {
-      drafts[id] = null;
-      setDrafts({...drafts});
-    }
-  };
-
-  const saveNew = (id, txt) => {
-    txt !== ""
-      ? setNewDraft({ id: id, txt: txt })
-      : setNewDraft({})
-  };
-
-  const newEntry = () => {
-    const n = newDraft;
-    const isNew = Object.keys(n).length === 0;
-    const now = Date.now();
-    return (
-      <div className="d-flex flex-column">
-        <TextareaAutosize
-          className="w-100 form-control"
-          placeholder="New journal entry"
-          value={isNew ? "" : n.txt}
-          onChange={(e) => saveNew(isNew ? now : n.id, e.target.value)}
-        />
-        {!isNew && (
-          <Button
-            className="w-100 mt-3"
-            variant="outline-primary"
-            onClick={() => submitNew(n.id, n.txt)}
-          >
-            Submit
-          </Button>
-        )}
-      </div>
-    );
-  };
-
-  const rmModal = () => {
-    const id = entryToDelete;
-    if (id !== null) {
-      return (
-        <Modal
-          size="lg"
-          centered
-          show={id !== null}
-          onHide={() => setEntryToDelete(null)}
-        >
-          <Modal.Header closeButton>
-            <Modal.Title>Confirm Delete</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            Are you sure you want to delete this journal entry?
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="outline-danger" onClick={() => submitDelete(id)}>
-              Delete
-            </Button>
-          </Modal.Footer>
-        </Modal>
-      );
-    }
-  };
-
-  const editBox = (id, txt, draft) => {
-    return (
-      <TextareaAutosize
-        className="w-100 form-control"
-        value={draft === null ? txt : draft}
-        onChange={(e) => saveDraft(id, e.target.value)}
-      />
-    );
-  };
-
-  const printEntry = ({ id, txt }) => {
-    const edit = id in drafts;
-    const draft = id in drafts ? drafts[id] : null;
-    const reg = /(?:\r?\n[ \t]*){2,}(?!\s*$)/;
-    let d = new Date(id);
-    return (
-      <Card key={id}>
-        <Card.Header className="fs-4 d-flex align-items-center justify-content-between">
-          {d.toLocaleString()}
-          <CloseButton
-            className="fs-6"
-            onClick={() => (edit ? cancelEdit(id) : setEntryToDelete(id))}
-          />
-        </Card.Header>
-        <Card.Body onClick={() => setEdit(id)}>
-          {edit
-            ? editBox(id, txt, draft)
-            : txt.split(reg).map((e, ind) => <p key={ind}>{e}</p>)}
-        </Card.Body>
-        {edit && (
-          <Button
-            variant="outline-primary"
-            className="mx-3 mb-3"
-            onClick={() => submitEdit(id, draft)}
-          >
-            Submit
-          </Button>
-        )}
-      </Card>
-    );
-  };
-
-  const doSetSearchStart = (when) => {
-    if (when instanceof Date && !isNaN(when)) {
-      const date = startOfDay(when);
-      setSearchStart(date);
-    } else setSearchStart(null);
-  };
-
-  const doSetSearchEnd = (when) => {
-    if (when instanceof Date && !isNaN(when)) {
-      const date = endOfDay(when);
-      setSearchEnd(date);
-    } else setSearchEnd(null);
-  };
-
-  const searcher = () => {
-    const ss = searchStart;
-    const se = searchEnd;
-    const rs = resultStart;
-    const re = resultEnd;
-    return (
-      <Stack gap={5}>
-        <div className="d-flex justify-content-between">
-          <div className="me-2 d-flex justify-content-start align-items-center flex-wrap">
-            <DayPickerInput
-              value={ss}
-              placeholder="FROM  YYYY-M-D"
-              onDayChange={(day) => doSetSearchStart(day)}
-              style={{ margin: "5px 5px 5px 0" }}
-            />
-            <DayPickerInput
-              value={se}
-              placeholder="TO  YYYY-M-D"
-              onDayChange={(day) => doSetSearchEnd(day)}
-              style={{ margin: "5px 5px 5px 0" }}
-            />
-          </div>
-          <Button
-            className="w-20"
-            variant={
-              ss === null || se === null
-                ? "outline-secondary"
-                : "outline-primary"
-            }
-            disabled={ss === null || se === null}
-            onClick={() => getSearch()}
-          >
-            Search
-          </Button>
-        </div>
-        {rs !== null && re !== null && (
-          <div className="fs-4">
-            Results for {rs.toLocaleDateString()} to {re.toLocaleDateString()}
-          </div>
-        )}
-      </Stack>
-    );
-  };
-
-  const setErrorMsg = (msg) => {
+  const addError = (msg) => {
     const id = errorCount + 1;
     setErrors(new Map(errors.set(id, msg)));
     setErrorCount(id);
   };
 
-  const rmErrorMsg = (id) => {
+  const rmError = (id) => {
     errors.delete(id);
     setErrors(new Map(errors));
-  };
-
-  const errorMsg = (id, msg) => {
-    return (
-      <Toast
-        key={id}
-        className="ms-auto"
-        onClose={() => rmErrorMsg(id)}
-        show={true}
-        delay={3000}
-        autohide
-        style={{ width: "fit-content" }}
-      >
-        <Toast.Header className="d-flex justify-content-between">
-          {msg}
-        </Toast.Header>
-      </Toast>
-    );
-  };
-
-  const getStatus = () => {
-    return (
-      <ToastContainer
-        style={{
-          position: "sticky",
-          bottom: 0,
-          width: "100%",
-          zIndex: 50,
-        }}
-      >
-        {[...errors].map((e) => errorMsg(e[0], e[1]))}
-        <Toast
-          bg={status === "try" ? "warning" : "danger"}
-          className="w-100"
-          show={status === "try" || status === "err"}
-        >
-          <Toast.Body
-            className="d-flex justify-content-center align-items-center"
-            onClick={status === "err" ? () => reconnect() : null}
-            role={status === "err" ? "button" : undefined}
-          >
-            <strong style={{ color: "white" }}>
-              {status === "try" && (
-                <Spinner animation="border" size="sm" className="me-1" />
-              )}
-              {status === "try" && "Reconnecting"}
-              {status === "err" && "Reconnect"}
-            </strong>
-          </Toast.Body>
-        </Toast>
-      </ToastContainer>
-    );
   };
 
   useEffect(() => {
@@ -452,18 +143,40 @@ export default function App() {
     init();
   }, []);
 
+  ///////////////////
+  // State Effects //
+  ///////////////////
+
   useEffect(() => {
     const upd = subEvent;
+
+    const getDataIndex = (id, data) => {
+      let low = 0;
+      let high = data.length;
+      while (low < high) {
+        let mid = (low + high) >>> 1;
+        if (data[mid].id > id) low = mid + 1;
+        else high = mid;
+      }
+      return low;
+    };
+
+    const isInSearch = (id, time) => (
+      searchMeta.time !== null &&
+      time >= searchMeta.time &&
+      searchMeta.start.getTime() <= id &&
+      searchMeta.end.getTime() >= id
+    );
+
     if (upd.time !== latestUpdate) {
       if ("entries" in upd) {
         setEntries(entries.concat(upd.entries));
       } else if ("add" in upd) {
         const { time, add } = upd;
-        const eInd = spot(add.id, entries);
-        const rInd = spot(add.id, results);
-        const toE =
-          entries.length === 0 || add.id > entries[entries.length - 1].id;
-        const toR = inSearch(add.id, time);
+        const eInd = getDataIndex(add.id, entries);
+        const rInd = getDataIndex(add.id, results);
+        const toE = entries.length === 0 || add.id > entries[entries.length - 1].id;
+        const toR = isInSearch(add.id, time);
         toE && entries.splice(eInd, 0, add);
         toR && results.splice(rInd, 0, add);
         toE && setEntries([...entries]);
@@ -474,7 +187,7 @@ export default function App() {
         const eInd = entries.findIndex((e) => e.id === edit.id);
         const rInd = results.findIndex((e) => e.id === edit.id);
         const toE = eInd !== -1;
-        const toR = rInd !== -1 && inSearch(edit.id, time);
+        const toR = rInd !== -1 && isInSearch(edit.id, time);
         if (toE) entries[eInd] = edit;
         if (toR) results[rInd] = edit;
         (toE || toR) && delete drafts[edit.id];
@@ -487,7 +200,7 @@ export default function App() {
         const eInd = entries.findIndex((e) => e.id === del.id);
         const rInd = results.findIndex((e) => e.id === del.id);
         const toE = eInd !== -1;
-        const toR = inSearch(del.id, time) && rInd !== -1;
+        const toR = isInSearch(del.id, time) && rInd !== -1;
         toE && entries.splice(eInd, 1);
         toR && results.splice(rInd, 1);
         (toE || toR) && delete drafts[del.id];
@@ -499,32 +212,324 @@ export default function App() {
     }
   }, [subEvent]);
 
+  /////////////////////
+  // Rendering Logic //
+  /////////////////////
+
   return (
     <React.Fragment>
-      {rmModal()}
+      <RemoveModal
+        deleteId={entryToDelete}
+        setDeleteId={setEntryToDelete}
+        setError={addError}
+      />
       <div className="m-3 d-flex justify-content-center">
         <Card style={{ maxWidth: "50rem", width: "100%" }}>
+          {/* Main Content */}
           <Tabs defaultActiveKey="journal" className="fs-2">
             <Tab eventKey="journal" title="Journal">
-              <BottomScrollListener onBottom={() => moreEntries()}>
-                {(scrollRef) => (
-                  <Stack gap={5} className="m-3 d-flex">
-                    {newEntry()}
-                    {entries.map((e) => printEntry(e))}
-                  </Stack>
-                )}
-              </BottomScrollListener>
+              {(entries.length > 0) &&
+                <BottomScrollListener onBottom={() => getEntries().then(
+                  (result) => setSubEvent(result),
+                  (err) => addError("Fetching more entries failed")
+                )}>
+                  {(scrollRef) => (
+                    <Stack gap={5} className="m-3 d-flex">
+                      <InputEntry
+                        draft={newDraft}
+                        setDraft={setNewDraft}
+                        setError={addError}
+                      />
+                      {entries.map((e) => (
+                        <JournalEntry
+                          key={e.id}
+                          entry={e}
+                          drafts={drafts}
+                          setDrafts={setDrafts}
+                          setDeleteId={setEntryToDelete}
+                          setError={addError}
+                        />
+                      ))}
+                    </Stack>
+                  )}
+                </BottomScrollListener>
+              }
             </Tab>
             <Tab eventKey="search" title="Search">
               <Stack gap={5} className="m-3 d-flex">
-                {searcher()}
-                {results.map((e) => printEntry(e))}
+                <SearchInput
+                  searchMeta={searchMeta}
+                  setSearchMeta={setSearchMeta}
+                  setResults={setResults}
+                  setError={addError}
+                />
+                {results.map((e) => (
+                  <JournalEntry
+                    key={e.id}
+                    entry={e}
+                    drafts={drafts}
+                    setDrafts={setDrafts}
+                    setDeleteId={setEntryToDelete}
+                    setError={addError}
+                  />
+                ))}
               </Stack>
             </Tab>
           </Tabs>
-          {getStatus()}
+          {/* Error Bar */}
+          <ToastContainer
+            style={{ position: "sticky", bottom: 0, width: "100%", zIndex: 50 }}
+          >
+            {[...errors].map(([id, txt]) => (
+              <Toast
+                key={id}
+                className="ms-auto"
+                onClose={() => rmError(id)}
+                show={true}
+                delay={3000}
+                autohide
+                style={{ width: "fit-content" }}
+              >
+                <Toast.Header className="d-flex justify-content-between">
+                  {txt}
+                </Toast.Header>
+              </Toast>
+            ))}
+            <Toast
+              bg={status === "try" ? "warning" : "danger"}
+              className="w-100"
+              show={status === "try" || status === "err"}
+            >
+              <Toast.Body
+                className="d-flex justify-content-center align-items-center"
+                onClick={status === "err" ? () => reconnect() : null}
+                role={status === "err" ? "button" : undefined}
+              >
+                <strong style={{ color: "white" }}>
+                  {status === "try" && (
+                    <Spinner animation="border" size="sm" className="me-1" />
+                  )}
+                  {status === "try" && "Reconnecting"}
+                  {status === "err" && "Reconnect"}
+                </strong>
+              </Toast.Body>
+            </Toast>
+          </ToastContainer>
         </Card>
       </div>
     </React.Fragment>
   );
 }
+
+///////////////////////
+// Helper Components //
+///////////////////////
+
+const InputEntry = ({ draft, setDraft, setError }) => {
+  const isNew = Object.keys(draft).length === 0;
+
+  const createEntry = (id, txt) => {
+    window.urbit.poke({
+      app: "journal",
+      mark: "journal-action",
+      json: { add: { id: id, txt: txt } },
+      onSuccess: () => setDraft({}),
+      onError: () => setError("New entry rejected"),
+    });
+  };
+
+  return (
+    <div className="d-flex flex-column">
+      <TextareaAutosize
+        className="w-100 form-control"
+        placeholder="New journal entry"
+        value={isNew ? "" : draft.txt}
+        onChange={(e) => setDraft({
+          id: isNew ? Date.now() : draft.id,
+          txt: e.target.value,
+        })}
+      />
+      {!isNew && (
+        <Button
+          className="w-100 mt-3"
+          variant="outline-primary"
+          onClick={() => createEntry(draft.id, draft.txt)}
+        >
+          Submit
+        </Button>
+      )}
+    </div>
+  );
+};
+
+const JournalEntry = ({ entry, drafts, setDrafts, setDeleteId, setError }) => {
+  const { id, txt } = entry;
+  const isEdit = id in drafts;
+  const draft = id in drafts ? drafts[id] : null;
+
+  const editEntry = (id, txt) => {
+    if (txt === null) {
+      delete drafts[id];
+      setDrafts({...drafts});
+    } else {
+      window.urbit.poke({
+        app: "journal",
+        mark: "journal-action",
+        json: { edit: { id: id, txt: txt } },
+        onError: () => setError("Edit rejected"),
+      });
+    }
+  };
+
+  return (
+    <Card key={id}>
+      <Card.Header className="fs-4 d-flex align-items-center justify-content-between">
+        {new Date(id).toLocaleString()}
+        <CloseButton
+          className="fs-6"
+          onClick={() => {
+            if (isEdit) {
+              delete drafts[id];
+              setDrafts({...drafts});
+            } else {
+              setDeleteId(id);
+            }
+          }}
+        />
+      </Card.Header>
+      <Card.Body onClick={() => setDrafts({[id]: null, ...drafts})}>
+        {isEdit
+          ? <TextareaAutosize
+              className="w-100 form-control"
+              value={draft === null ? txt : draft}
+              onChange={(e) => setDrafts({...drafts, [id]: e.target.value})}
+            />
+          : txt.split(/(?:\r?\n[ \t]*){2,}(?!\s*$)/).map(
+              (e, i) => (<p key={i}>{e}</p>)
+            )
+        }
+      </Card.Body>
+      {isEdit && (
+        <Button
+          variant="outline-primary"
+          className="mx-3 mb-3"
+          onClick={() => editEntry(id, draft)}
+        >
+          Submit
+        </Button>
+      )}
+    </Card>
+  );
+};
+
+const SearchInput = ({
+  searchMeta: {start: searchStart, end: searchEnd},
+  setSearchMeta,
+  setResults,
+  setError,
+}) => {
+  const [inputStart, setInputStart] = useState(null);
+  const [inputEnd, setInputEnd] = useState(null);
+
+  const searchEntries = async () => {
+    const start = Math.max(inputStart.getTime(), 0);
+    const end = Math.max(inputEnd.getTime(), 0);
+    window.urbit.scry({
+      app: "journal",
+      path: `/entries/between/${start}/${end}`,
+    }).then(
+      (result) => {
+        setInputStart(null);
+        setInputEnd(null);
+        setResults(result.entries);
+        setSearchMeta({
+          time: result.time,
+          start: inputStart,
+          end: inputEnd
+        });
+      },
+      (err) => {
+        setError("Search failed");
+      }
+    );
+  };
+
+  return (
+    <Stack gap={5}>
+      <div className="d-flex justify-content-between">
+        <div className="me-2 d-flex justify-content-start align-items-center flex-wrap">
+          <DayPickerInput
+            value={inputStart}
+            placeholder="FROM  YYYY-M-D"
+            onDayChange={(day) => setInputStart(
+              day instanceof Date && !isNaN(day)
+                ? startOfDay(day)
+                : null
+            )}
+            style={{ margin: "5px 5px 5px 0" }}
+          />
+          <DayPickerInput
+            value={inputEnd}
+            placeholder="TO  YYYY-M-D"
+            onDayChange={(day) => setInputEnd(
+              day instanceof Date && !isNaN(day)
+                ? endOfDay(day)
+                : null
+            )}
+            style={{ margin: "5px 5px 5px 0" }}
+          />
+        </div>
+        <Button
+          className="w-20"
+          variant={
+            inputStart === null || inputEnd === null
+              ? "outline-secondary"
+              : "outline-primary"
+          }
+          disabled={inputStart === null || inputEnd === null}
+          onClick={() => searchEntries()}
+        >
+          Search
+        </Button>
+      </div>
+      {searchStart !== null && searchEnd !== null && (
+        <div className="fs-4">
+          Results for {searchStart.toLocaleDateString()} to {searchEnd.toLocaleDateString()}
+        </div>
+      )}
+    </Stack>
+  );
+};
+
+const RemoveModal = ({ deleteId, setDeleteId, setError }) => {
+  const deleteEntry = (id) => {
+    window.urbit.poke({
+      app: "journal",
+      mark: "journal-action",
+      json: { del: { id: id } },
+      onError: () => setError("Deletion rejected"),
+    });
+    setDeleteId(null);
+  };
+
+  return (deleteId !== null) && (
+    <Modal
+      size="lg"
+      centered
+      show={deleteId !== null}
+      onHide={() => setDeleteId(null)}
+    >
+      <Modal.Header closeButton>
+        <Modal.Title>Confirm Delete</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        Are you sure you want to delete this journal entry?
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="outline-danger" onClick={() => deleteEntry(deleteId)}>
+          Delete
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
+};
