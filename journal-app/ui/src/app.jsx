@@ -1,22 +1,15 @@
-// import React, { Component } from "react";
-import React, {useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import Urbit from "@urbit/http-api";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "react-day-picker/lib/style.css";
 import TextareaAutosize from "react-textarea-autosize";
-import Button from "react-bootstrap/Button";
-import Card from "react-bootstrap/Card";
-import Stack from "react-bootstrap/Stack";
-import Tab from "react-bootstrap/Tab";
-import Tabs from "react-bootstrap/Tabs";
-import ToastContainer from "react-bootstrap/ToastContainer";
-import Toast from "react-bootstrap/Toast";
-import Spinner from "react-bootstrap/Spinner";
-import CloseButton from "react-bootstrap/CloseButton";
-import Modal from "react-bootstrap/Modal";
+import {
+  Button, Card, Stack, Tab, Tabs,
+  Toast, ToastContainer,
+  Spinner, CloseButton, Modal,
+} from "react-bootstrap";
 import DayPickerInput from "react-day-picker/DayPickerInput";
-import endOfDay from "date-fns/endOfDay";
-import startOfDay from "date-fns/startOfDay";
+import { startOfDay, endOfDay } from "date-fns";
 import { BottomScrollListener } from "react-bottom-scroll-listener";
 
 ////////////////////
@@ -69,8 +62,7 @@ export default function App() {
 
   const reconnect = () => {
     window.urbit.reset();
-    const latest = latestUpdate;
-    if (latest === null) {
+    if (latestUpdate === null) {
       init();
     } else {
       getUpdates().then(
@@ -101,8 +93,7 @@ export default function App() {
   };
 
   const getUpdates = async () => {
-    const latest = latestUpdate;
-    const since = latest === null ? Date.now() : latest;
+    const since = latestUpdate === null ? Date.now() : latestUpdate;
     const path = `/updates/since/${since}`;
     return window.urbit.scry({
       app: "journal",
