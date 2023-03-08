@@ -2,11 +2,9 @@ import React, { useState, useEffect } from "react";
 import Urbit from "@urbit/http-api";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "react-day-picker/lib/style.css";
-import TextareaAutosize from "react-textarea-autosize";
 import {
-  Button, Card, Stack, Tab, Tabs,
-  Toast, ToastContainer,
-  Spinner, CloseButton, Modal,
+  Modal, Card, Stack, Tab, Tabs, Toast, ToastContainer,
+  Button, Spinner, CloseButton,
 } from "react-bootstrap";
 import DayPickerInput from "react-day-picker/DayPickerInput";
 import { startOfDay, endOfDay } from "date-fns";
@@ -39,7 +37,7 @@ export default function App() {
   const [searchMeta, setSearchMeta] = useState({
     time: null,
     start: null,
-    end: null
+    end: null,
   });
 
   ///////////////////////
@@ -67,7 +65,7 @@ export default function App() {
     } else {
       getUpdates().then(
         (result) => {
-          result.logs.map(setSubEvent); // FIXME?
+          result.logs.map(setSubEvent);
           subscribe();
         },
         (err) => {
@@ -123,6 +121,10 @@ export default function App() {
     setErrors(new Map(errors));
   };
 
+  ///////////////////
+  // State Effects //
+  ///////////////////
+
   useEffect(() => {
     window.urbit = new Urbit("");
     window.urbit.ship = window.ship;
@@ -134,13 +136,7 @@ export default function App() {
     init();
   }, []);
 
-  ///////////////////
-  // State Effects //
-  ///////////////////
-
   useEffect(() => {
-    const upd = subEvent;
-
     const getDataIndex = (id, data) => {
       let low = 0;
       let high = data.length;
@@ -159,11 +155,11 @@ export default function App() {
       searchMeta.end.getTime() >= id
     );
 
-    if (upd.time !== latestUpdate) {
-      if ("entries" in upd) {
-        setEntries(entries.concat(upd.entries));
-      } else if ("add" in upd) {
-        const { time, add } = upd;
+    if (subEvent.time !== latestUpdate) {
+      if ("entries" in subEvent) {
+        setEntries(entries.concat(subEvent.entries));
+      } else if ("add" in subEvent) {
+        const { time, add } = subEvent;
         const eInd = getDataIndex(add.id, entries);
         const rInd = getDataIndex(add.id, results);
         const toE = entries.length === 0 || add.id > entries[entries.length - 1].id;
@@ -173,8 +169,8 @@ export default function App() {
         toE && setEntries([...entries]);
         toR && setResults([...results]);
         setLatestUpdate(time);
-      } else if ("edit" in upd) {
-        const { time, edit } = upd;
+      } else if ("edit" in subEvent) {
+        const { time, edit } = subEvent;
         const eInd = entries.findIndex((e) => e.id === edit.id);
         const rInd = results.findIndex((e) => e.id === edit.id);
         const toE = eInd !== -1;
@@ -186,8 +182,8 @@ export default function App() {
         toR && setResults([...results]);
         (toE || toR) && setDrafts({...drafts});
         setLatestUpdate(time);
-      } else if ("del" in upd) {
-        const { time, del } = upd;
+      } else if ("del" in subEvent) {
+        const { time, del } = subEvent;
         const eInd = entries.findIndex((e) => e.id === del.id);
         const rInd = results.findIndex((e) => e.id === del.id);
         const toE = eInd !== -1;
@@ -331,14 +327,15 @@ const InputEntry = ({ draft, setDraft, setError }) => {
 
   return (
     <div className="d-flex flex-column">
-      <TextareaAutosize
-        className="w-100 form-control"
+      <AutoResizeTextArea
         placeholder="New journal entry"
         value={isNew ? "" : draft.txt}
-        onChange={(e) => setDraft({
-          id: isNew ? Date.now() : draft.id,
-          txt: e.target.value,
-        })}
+        onChange={(e) => {
+          setDraft({
+            id: isNew ? Date.now() : draft.id,
+            txt: e.target.value,
+          });
+        }}
       />
       {!isNew && (
         <Button
@@ -388,12 +385,11 @@ const JournalEntry = ({ entry, drafts, setDrafts, setDeleteId, setError }) => {
           }}
         />
       </Card.Header>
-      <Card.Body onClick={() => setDrafts({[id]: null, ...drafts})}>
+      <Card.Body onClick={() => setDrafts({ [id]: null, ...drafts })}>
         {isEdit
-          ? <TextareaAutosize
-              className="w-100 form-control"
+          ? <AutoResizeTextArea
               value={draft === null ? txt : draft}
-              onChange={(e) => setDrafts({...drafts, [id]: e.target.value})}
+              onChange={(e) => setDrafts({ ...drafts, [id]: e.target.value })}
             />
           : txt.split(/(?:\r?\n[ \t]*){2,}(?!\s*$)/).map(
               (e, i) => (<p key={i}>{e}</p>)
@@ -414,7 +410,7 @@ const JournalEntry = ({ entry, drafts, setDrafts, setDeleteId, setError }) => {
 };
 
 const SearchInput = ({
-  searchMeta: {start: searchStart, end: searchEnd},
+  searchMeta: { start: searchStart, end: searchEnd },
   setSearchMeta,
   setResults,
   setError,
@@ -524,3 +520,17 @@ const RemoveModal = ({ deleteId, setDeleteId, setError }) => {
     </Modal>
   );
 };
+
+const AutoResizeTextArea = ({ onChange, ...props }) => (
+  <div className="grow-wrap">
+    <textarea
+      className="w-100 form-control"
+      onChange={(e) => {
+        const { target: { value, parentNode } } = e;
+        parentNode.dataset.replicatedValue = value;
+        onChange(e);
+      }}
+      {...props}
+    />
+  </div>
+);
