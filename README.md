@@ -100,12 +100,6 @@ set up a locally-hosted front-end interface:
 12. Open a web browser and navigate to the web address from the step 11.
     If the local hosting was successful, you should see the interface for the
     example in your browser.
-13. If your browser encounters an error during the previous step, then you may
-    need to enable the [CORS] registry on your ship with the following `dojo`
-    command (where `ABC` is from step 11):
-    ```
-    |cors-approve ~~http~3a.~2f.~2f.localhost~3a.ABC
-    ```
 
 ### Editing and Rebuilding ###
 
@@ -134,12 +128,11 @@ slightly more complicated:
      ```
      |commit %example-desk
      ```
-   - If you did made changes to the example app's data model (e.g. `/sur` file
-     changes, `state` value changes, etc.):
+   - If you did make changes to the example app's data model (e.g. via `/sur`
+     file changes, app `state` changes, etc.):
      ```
      |nuke %example-desk
      |commit %example-desk
-     |revive %example-desk
      ```
 
 
