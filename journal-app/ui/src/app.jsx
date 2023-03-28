@@ -6,7 +6,7 @@ import {
   Modal, Card, Stack, Tab, Tabs, Toast, ToastContainer,
   Button, Spinner, CloseButton,
 } from "react-bootstrap";
-import DayPickerInput from "react-day-picker/DayPickerInput";
+import DayPicker from "react-day-picker";
 import { startOfDay, endOfDay } from "date-fns";
 import { BottomScrollListener } from "react-bottom-scroll-listener";
 
@@ -157,7 +157,16 @@ export default function App() {
 
     if (subEvent.time !== latestUpdate) {
       if ("entries" in subEvent) {
-        setEntries(entries.concat(subEvent.entries));
+        // NOTE: `BottomScrollListener` can fire on top of `init`, which can
+        // cause entries to be double loaded; we trim duplicates to avoid overlap
+        const [existing, incoming] = [entries, subEvent.entries];
+        const oldestExistingId = existing.length === 0
+          ? Date.now()
+          : existing[existing.length - 1].id;
+        let newestIncomingInd = getDataIndex(oldestExistingId, incoming);
+        newestIncomingInd += newestIncomingInd < incoming.length
+          && incoming[newestIncomingInd].id >= oldestExistingId;
+        setEntries(existing.concat(incoming.slice(newestIncomingInd)));
       } else if ("add" in subEvent) {
         const { time, add } = subEvent;
         const eInd = getDataIndex(add.id, entries);
@@ -215,32 +224,30 @@ export default function App() {
           {/* Main Content */}
           <Tabs defaultActiveKey="journal" className="fs-2">
             <Tab eventKey="journal" title="Journal">
-              {(entries.length > 0) &&
-                <BottomScrollListener onBottom={() => getEntries().then(
-                  (result) => setSubEvent(result),
-                  (err) => addError("Fetching more entries failed")
-                )}>
-                  {(scrollRef) => (
-                    <Stack gap={5} className="m-3 d-flex">
-                      <InputEntry
-                        draft={newDraft}
-                        setDraft={setNewDraft}
+              <BottomScrollListener onBottom={() => getEntries().then(
+                (result) => setSubEvent(result),
+                (err) => addError("Fetching more entries failed")
+              )}>
+                {(scrollRef) => (
+                  <Stack gap={5} className="m-3 d-flex">
+                    <InputEntry
+                      draft={newDraft}
+                      setDraft={setNewDraft}
+                      setError={addError}
+                    />
+                    {entries.map((e) => (
+                      <JournalEntry
+                        key={e.id}
+                        entry={e}
+                        drafts={drafts}
+                        setDrafts={setDrafts}
+                        setDeleteId={setEntryToDelete}
                         setError={addError}
                       />
-                      {entries.map((e) => (
-                        <JournalEntry
-                          key={e.id}
-                          entry={e}
-                          drafts={drafts}
-                          setDrafts={setDrafts}
-                          setDeleteId={setEntryToDelete}
-                          setError={addError}
-                        />
-                      ))}
-                    </Stack>
-                  )}
-                </BottomScrollListener>
-              }
+                    ))}
+                  </Stack>
+                )}
+              </BottomScrollListener>
             </Tab>
             <Tab eventKey="search" title="Search">
               <Stack gap={5} className="m-3 d-flex">
@@ -445,7 +452,7 @@ const SearchInput = ({
     <Stack gap={5}>
       <div className="d-flex justify-content-between">
         <div className="me-2 d-flex justify-content-start align-items-center flex-wrap">
-          <DayPickerInput
+          <DayPicker.Input
             value={inputStart}
             placeholder="FROM  YYYY-M-D"
             onDayChange={(day) => setInputStart(
@@ -455,7 +462,7 @@ const SearchInput = ({
             )}
             style={{ margin: "5px 5px 5px 0" }}
           />
-          <DayPickerInput
+          <DayPicker.Input
             value={inputEnd}
             placeholder="TO  YYYY-M-D"
             onDayChange={(day) => setInputEnd(
