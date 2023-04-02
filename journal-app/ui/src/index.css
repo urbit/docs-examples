@@ -11,3 +11,35 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/*
+ * Solution to Auto-grow Text Areas from 'css-tricks.com':
+ * - https://css-tricks.com/the-cleanest-trick-for-autogrowing-textareas/
+ * - https://css-tricks.com/snippets/css/prevent-long-urls-from-breaking-out-of-container/
+ */
+.grow-wrap {
+  display: grid;
+}
+.grow-wrap::after {
+  content: attr(data-replicated-value) " ";
+  white-space: pre-wrap;
+  visibility: hidden;
+}
+.grow-wrap > textarea {
+  resize: none;
+  overflow: hidden;
+}
+.grow-wrap > textarea, .grow-wrap::after {
+  padding: 0.5rem;
+  grid-area: 1 / 1 / 2 / 2;
+
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  -ms-word-break: break-all;
+  word-break: break-all;
+  word-break: break-word;
+  -ms-hyphens: auto;
+  -moz-hyphens: auto;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+}
