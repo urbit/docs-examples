@@ -6,7 +6,7 @@
         section=?(%subs %new %groups)
     ==
 ^-  manx
-?.  .^(? %gu /(scot %p our.bol)/squad/(scot %da now.bol))
+?.  .^(? %gu /(scot %p our.bol)/squad/(scot %da now.bol)/$)
   ;html
     ;head
       ;title: Tally
