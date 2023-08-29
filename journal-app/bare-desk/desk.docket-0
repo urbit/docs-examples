@@ -2,7 +2,7 @@
   title+'Journal'
   info+'Dear diary...'
   color+0xd9.b06d
-  version+[0 1 1]
+  version+[0 1 2]
   website+'https://urbit.org'
   license+'MIT'
   base+'journal'
