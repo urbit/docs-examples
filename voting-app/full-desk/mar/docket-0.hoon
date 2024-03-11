@@ -2,7 +2,7 @@
 |_  =docket:dock
 ++  grow
   |%
-  ++  mime  
+  ++  mime
     ^-  ^mime
     [/text/x-docket (as-octt:mimes:html (spit-docket:mime:dock docket))]
   ++  noun  docket
