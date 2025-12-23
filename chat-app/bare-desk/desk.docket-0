@@ -2,7 +2,7 @@
   title+'Hut'
   info+'A simple chat app.'
   color+0x7c.afc2
-  version+[0 1 1]
+  version+[0 1 2]
   website+'https://urbit.org'
   license+'MIT'
   base+'hut'
