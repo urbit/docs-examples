@@ -10,7 +10,7 @@
       =ring-group
   ==
 +$  vote  (pair ? raw-ring-signature)
-+$  votes  (map @udpoint vote)
++$  votes  (map @uxpoint vote)
 ::
 +$  by-group  (mip gid pid [=poll =votes])
 ::
