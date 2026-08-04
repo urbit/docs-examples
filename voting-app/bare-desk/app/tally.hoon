@@ -137,13 +137,17 @@
         =/  [=poll =votes]  (~(got bi by-group) gid pid)
         =/  raw=raw-ring-signature
           =<  raw
+          ::  as of 408k, +sign takes a bare (set @p) and resolves each
+          ::  ship's life itself, so project the poll's pinned
+          ::  [ship life] participants down to their ships.
+          ::
           %:  sign:ring
             our.bol
             now.bol
             eny.bol
             choice
             `pid
-            participants.ring-group.poll
+            (silt (turn ~(tap in participants.ring-group.poll) head))
           ==
         =^  cards  state  (handle-action %vote gid pid choice raw)
         :_  state(section %groups)
@@ -380,7 +384,7 @@
       %+  ~(put by acc)  pid
       :-  poll
       %-  ~(rep by votes)
-      |=  [[y=@udpoint =vote] acc=(map @udpoint vote)]
+      |=  [[y=@uxpoint =vote] acc=(map @uxpoint vote)]
       ?.  =(y (fall y.q.vote 0^0))  acc
       ?.  %:  verify:ring
             our.bol
